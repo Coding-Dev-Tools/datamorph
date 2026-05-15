@@ -1,6 +1,17 @@
 # DataMorph CLI
 
-Batch data format converter with streaming support for large files.
+**Batch data format converter** with streaming support for files over 10GB.
+
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://pypi.org/project/datamorph/)
+[![CI](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/test.yml/badge.svg)](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/datamorph)](https://pypi.org/project/datamorph/)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/Coding-Dev-Tools/datamorph/blob/main/LICENSE)
+
+Part of the [Revenue Holdings](https://coding-dev-tools.github.io/revenueholdings.dev/) developer tool ecosystem.
+
+## Why DataMorph?
+
+Data format conversion shouldn't require a custom script every time. CSV to Parquet for analytics, JSON to YAML for configs, Avro to JSON for debugging — DataMorph handles it all with one command. And for large files, row-by-row streaming means you never run out of memory.
 
 ## Features
 
@@ -16,42 +27,35 @@ Batch data format converter with streaming support for large files.
 pip install datamorph
 ```
 
-## Usage
-
-### Convert a single file
+## Quick Start
 
 ```bash
-# CSV to Parquet
+# Convert a single file
 datamorph convert input.csv output.parquet
-
-# JSON to CSV
 datamorph convert input.json output.csv
-
-# YAML to JSON
 datamorph convert input.yaml output.json
-
-# Parquet to CSV
 datamorph convert input.parquet output.csv
-```
 
-### Batch convert all files in a directory
-
-```bash
+# Batch convert all files in a directory
 datamorph batch ./csv_data/ ./parquet_data/ --from csv --to parquet --recursive
-```
 
-### Inspect schema
-
-```bash
+# Inspect schema
 datamorph schema data.parquet
 datamorph schema data.csv --json-output
-```
 
-### List supported formats
-
-```bash
+# List supported formats
 datamorph formats
 ```
+
+## Pricing
+
+| Tier | Price | Features |
+|------|-------|----------|
+| **Free** | $0 | CLI only, 100 conversions/mo |
+| **Pro** | $12/mo | Unlimited conversions, streaming, batch mode, all formats |
+| **Suite** | $49/mo | All 8 Revenue Holdings tools |
+
+Get a license key at [revenueholdings.dev/pricing](https://coding-dev-tools.github.io/revenueholdings.dev/pricing.html).
 
 ## Development
 
@@ -62,4 +66,4 @@ pytest tests/ -v
 
 ## License
 
-MIT
+MIT — [Revenue Holdings](https://coding-dev-tools.github.io/revenueholdings.dev/)
