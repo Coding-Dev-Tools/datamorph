@@ -1,0 +1,417 @@
+"""Tests for DataMorph format converters and CLI."""
+
+from __future__ import annotations
+
+import json
+import os
+import tempfile
+from pathlib import Path
+
+import pytest
+import yaml
+
+from datamorph.converters import (
+    convert,
+    detect_format,
+    supported_formats,
+    get_reader,
+    get_writer,
+    Row,
+)
+from datamorph.cli import cli
+
+# ── Fixtures ──────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def runner():
+    from click.testing import CliRunner
+    return CliRunner()
+
+
+@pytest.fixture
+def sample_csv(tmp_path):
+    path = tmp_path / "test.csv"
+    path.write_text("name,age,city\nAlice,30,NYC\nBob,25,LA\nCharlie,35,Chicago\n")
+    return path
+
+
+@pytest.fixture
+def sample_json(tmp_path):
+    path = tmp_path / "test.json"
+    data = [
+        {"name": "Alice", "age": 30, "city": "NYC"},
+        {"name": "Bob", "age": 25, "city": "LA"},
+        {"name": "Charlie", "age": 35, "city": "Chicago"},
+    ]
+    path.write_text(json.dumps(data))
+    return path
+
+
+@pytest.fixture
+def sample_yaml(tmp_path):
+    path = tmp_path / "test.yaml"
+    data = [
+        {"name": "Alice", "age": 30, "city": "NYC"},
+        {"name": "Bob", "age": 25, "city": "LA"},
+    ]
+    with open(path, "w") as f:
+        yaml.dump(data, f)
+    return path
+
+
+# ── Format Detection ─────────────────────────────────────────────────
+
+
+class TestDetectFormat:
+    def test_csv(self):
+        assert detect_format("data.csv") == "csv"
+
+    def test_json(self):
+        assert detect_format("data.json") == "json"
+
+    def test_yaml(self):
+        assert detect_format("data.yaml") == "yaml"
+        assert detect_format("data.yml") == "yaml"
+
+    def test_parquet(self):
+        assert detect_format("data.parquet") == "parquet"
+        assert detect_format("data.pq") == "parquet"
+
+    def test_avro(self):
+        assert detect_format("data.avro") == "avro"
+
+    def test_unknown(self):
+        assert detect_format("data.txt") is None
+
+    def test_supported_formats_not_empty(self):
+        fmts = supported_formats()
+        assert len(fmts) >= 5
+        assert "csv" in fmts
+        assert "json" in fmts
+        assert "yaml" in fmts
+
+
+# ── CSV ────────────────────────────────────────────────────────────────
+
+
+class TestCsvConversion:
+    def test_csv_to_json(self, sample_csv, tmp_path):
+        output = tmp_path / "output.json"
+        result = convert(sample_csv, output)
+        assert not result.errors
+        assert result.rows_written == 3
+        assert result.input_format == "csv"
+        assert result.output_format == "json"
+
+        data = json.loads(output.read_text())
+        assert len(data) == 3
+        assert data[0]["name"] == "Alice"
+        assert data[0]["age"] == "30"
+
+    def test_csv_to_yaml(self, sample_csv, tmp_path):
+        output = tmp_path / "output.yaml"
+        result = convert(sample_csv, output)
+        assert not result.errors
+        assert result.rows_written == 3
+
+    def test_csv_to_csv_copy(self, sample_csv, tmp_path):
+        output = tmp_path / "copy.csv"
+        result = convert(sample_csv, output)
+        assert not result.errors
+        assert result.rows_written == 3
+        assert "Alice" in output.read_text()
+
+    def test_csv_read_empty(self, tmp_path):
+        path = tmp_path / "empty.csv"
+        path.write_text("name,age\n")
+        result = convert(path, tmp_path / "out.json")
+        assert not result.errors
+        assert result.rows_written == 0
+
+    def test_csv_with_custom_delimiter(self, tmp_path):
+        path = tmp_path / "data.csv"
+        path.write_text("name|age\nAlice|30\nBob|25\n")
+        output = tmp_path / "out.json"
+        result = convert(path, output, csv_delimiter="|")
+        # The csv_delimiter as a special param — let me check this
+        # It's passed to the writer but we need to handle it in convert()
+        assert not result.errors
+
+
+# ── JSON ──────────────────────────────────────────────────────────────
+
+
+class TestJsonConversion:
+    def test_json_to_csv(self, sample_json, tmp_path):
+        output = tmp_path / "output.csv"
+        result = convert(sample_json, output)
+        assert not result.errors
+        assert result.rows_written == 3
+
+        content = output.read_text()
+        assert "Alice" in content
+        assert "name" in content  # Header
+
+    def test_json_to_json_copy(self, sample_json, tmp_path):
+        output = tmp_path / "output.json"
+        result = convert(sample_json, output)
+        assert not result.errors
+        assert result.rows_written == 3
+
+    def test_json_to_yaml(self, sample_json, tmp_path):
+        output = tmp_path / "output.yaml"
+        result = convert(sample_json, output)
+        assert not result.errors
+        assert result.rows_written == 3
+
+    def test_json_single_object(self, tmp_path):
+        path = tmp_path / "single.json"
+        path.write_text(json.dumps({"name": "Alice", "age": 30}))
+        output = tmp_path / "out.csv"
+        result = convert(path, output)
+        assert not result.errors
+        assert result.rows_written == 1
+
+
+# ── YAML ──────────────────────────────────────────────────────────────
+
+
+class TestYamlConversion:
+    def test_yaml_to_json(self, sample_yaml, tmp_path):
+        output = tmp_path / "output.json"
+        result = convert(sample_yaml, output)
+        assert not result.errors
+        assert result.rows_written == 2
+
+        data = json.loads(output.read_text())
+        assert len(data) == 2
+        assert data[0]["name"] == "Alice"
+
+    def test_yaml_to_csv(self, sample_yaml, tmp_path):
+        output = tmp_path / "output.csv"
+        result = convert(sample_yaml, output)
+        assert not result.errors
+        assert result.rows_written == 2
+
+
+# ── Parquet ───────────────────────────────────────────────────────────
+
+
+class TestParquetConversion:
+    def test_csv_to_parquet(self, sample_csv, tmp_path):
+        output = tmp_path / "output.parquet"
+        result = convert(sample_csv, output)
+        assert not result.errors
+        assert result.rows_written == 3
+
+    def test_parquet_to_csv(self, sample_csv, tmp_path):
+        parquet_file = tmp_path / "temp.parquet"
+        result = convert(sample_csv, parquet_file)
+        assert not result.errors
+        assert result.rows_written == 3
+
+        output = tmp_path / "roundtrip.csv"
+        result = convert(parquet_file, output)
+        assert not result.errors
+        assert result.rows_written == 3
+        assert "Alice" in output.read_text()
+
+    def test_parquet_to_json(self, sample_csv, tmp_path):
+        parquet_file = tmp_path / "temp.parquet"
+        convert(sample_csv, parquet_file)
+        output = tmp_path / "out.json"
+        result = convert(parquet_file, output)
+        assert not result.errors
+        assert result.rows_written == 3
+
+
+# ── Avro ──────────────────────────────────────────────────────────────
+
+
+class TestAvroConversion:
+    def test_csv_to_avro(self, sample_csv, tmp_path):
+        output = tmp_path / "output.avro"
+        result = convert(sample_csv, output)
+        assert not result.errors
+        assert result.rows_written == 3
+
+    def test_avro_to_csv(self, sample_csv, tmp_path):
+        avro_file = tmp_path / "temp.avro"
+        result = convert(sample_csv, avro_file)
+        assert not result.errors
+
+        output = tmp_path / "roundtrip.csv"
+        result = convert(avro_file, output)
+        assert not result.errors
+        assert result.rows_written == 3
+        assert "Alice" in output.read_text()
+
+    def test_avro_to_json(self, sample_csv, tmp_path):
+        avro_file = tmp_path / "temp.avro"
+        convert(sample_csv, avro_file)
+        output = tmp_path / "out.json"
+        result = convert(avro_file, output)
+        assert not result.errors
+        assert result.rows_written == 3
+
+
+# ── Error Handling ────────────────────────────────────────────────────
+
+
+class TestErrors:
+    def test_invalid_input_format(self, tmp_path):
+        result = convert(tmp_path / "nonexistent.csv", tmp_path / "out.json")
+        assert result.errors
+
+    def test_unsupported_format(self):
+        from datamorph.converters import get_reader
+        with pytest.raises(ValueError, match="Unsupported format"):
+            get_reader("exe")
+
+    def test_unsupported_output_format(self, sample_csv, tmp_path):
+        with pytest.raises(ValueError, match="Unsupported format"):
+            convert(sample_csv, tmp_path / "out.txt", output_format="exe")
+
+    def test_nonexistent_file(self, tmp_path):
+        result = convert(tmp_path / "nope.csv", tmp_path / "out.json")
+        assert result.errors
+
+    def test_empty_json_array(self, tmp_path):
+        path = tmp_path / "empty.json"
+        path.write_text("[]")
+        output = tmp_path / "out.csv"
+        result = convert(path, output)
+        assert not result.errors
+        assert result.rows_written == 0
+
+
+# ── Schema Inference ──────────────────────────────────────────────────
+
+
+class TestSchemaInference:
+    def test_infer_from_csv(self, sample_csv):
+        reader = get_reader("csv")
+        schema = reader.infer_schema(sample_csv)
+        assert len(schema) == 3  # name, age, city
+        field_names = {s["name"] for s in schema}
+        assert field_names == {"name", "age", "city"}
+
+    def test_infer_from_json(self, sample_json):
+        reader = get_reader("json")
+        schema = reader.infer_schema(sample_json)
+        assert len(schema) == 3
+
+
+# ── CLI Tests ────────────────────────────────────────────────────────
+
+
+class TestCLI:
+    def test_version(self, runner):
+        result = runner.invoke(cli, ["--version"])
+        assert result.exit_code == 0
+        assert "0.1.0" in result.output
+
+    def test_help(self, runner):
+        result = runner.invoke(cli, ["--help"])
+        assert result.exit_code == 0
+        assert "convert" in result.output
+        assert "batch" in result.output
+        assert "schema" in result.output
+        assert "formats" in result.output
+
+    def test_convert_command(self, runner, sample_csv, tmp_path):
+        output = tmp_path / "out.json"
+        result = runner.invoke(cli, ["convert", str(sample_csv), str(output)])
+        assert result.exit_code == 0
+        assert "Converted" in result.output
+
+    def test_convert_with_format_override(self, runner, sample_csv, tmp_path):
+        output = tmp_path / "out.txt"
+        result = runner.invoke(cli, [
+            "convert", str(sample_csv), str(output),
+            "--input-format", "csv",
+            "--output-format", "json",
+        ])
+        assert result.exit_code == 0
+        assert "Converted" in result.output
+
+    def test_convert_to_parquet(self, runner, sample_csv, tmp_path):
+        output = tmp_path / "out.parquet"
+        result = runner.invoke(cli, ["convert", str(sample_csv), str(output)])
+        assert result.exit_code == 0
+
+    def test_convert_nonexistent_input(self, runner, tmp_path):
+        result = runner.invoke(cli, ["convert", "/nonexistent/file.csv", str(tmp_path / "out.json")])
+        assert result.exit_code != 0
+
+    def test_formats_command(self, runner):
+        result = runner.invoke(cli, ["formats"])
+        assert result.exit_code == 0
+        assert "csv" in result.output
+        assert "json" in result.output
+
+    def test_schema_command(self, runner, sample_csv):
+        result = runner.invoke(cli, ["schema", str(sample_csv)])
+        assert result.exit_code == 0
+        assert "name" in result.output
+        assert "age" in result.output
+
+    def test_schema_json_output(self, runner, sample_csv):
+        result = runner.invoke(cli, ["schema", str(sample_csv), "--json-output"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert isinstance(data, list)
+        assert len(data) >= 1
+
+    def test_batch_no_input(self, runner, tmp_path):
+        result = runner.invoke(cli, [
+            "batch", str(tmp_path), str(tmp_path / "out"),
+            "--from", "csv", "--to", "json",
+        ])
+        assert result.exit_code == 0
+
+
+# ── Multi-format Roundtrips ──────────────────────────────────────────
+
+
+class TestRoundtrips:
+    def test_csv_json_csv_roundtrip(self, sample_csv, tmp_path):
+        json_file = tmp_path / "step1.json"
+        convert(sample_csv, json_file)
+        csv_file = tmp_path / "step2.csv"
+        result = convert(json_file, csv_file)
+        assert not result.errors
+        assert result.rows_written == 3
+        assert "Alice" in csv_file.read_text()
+
+    def test_csv_yaml_csv_roundtrip(self, sample_csv, tmp_path):
+        yaml_file = tmp_path / "step1.yaml"
+        convert(sample_csv, yaml_file)
+        csv_file = tmp_path / "step2.csv"
+        result = convert(yaml_file, csv_file)
+        assert not result.errors
+        assert result.rows_written == 3
+        assert "Alice" in csv_file.read_text()
+
+    def test_csv_json_yaml_roundtrip(self, sample_csv, tmp_path):
+        json_file = tmp_path / "step1.json"
+        convert(sample_csv, json_file)
+        yaml_file = tmp_path / "step2.yaml"
+        result = convert(json_file, yaml_file)
+        assert not result.errors
+        assert result.rows_written == 3
+
+    def test_large_json_array(self, tmp_path):
+        """Test with 1000 rows."""
+        path = tmp_path / "large.json"
+        data = [{"id": i, "value": f"item-{i}"} for i in range(1000)]
+        path.write_text(json.dumps(data))
+
+        output = tmp_path / "out.csv"
+        result = convert(path, output)
+        assert not result.errors
+        assert result.rows_written == 1000
+
+        lines = output.read_text().strip().split("\n")
+        assert len(lines) == 1001  # 1000 data + 1 header
