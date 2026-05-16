@@ -1,5 +1,7 @@
 # DataMorph CLI
 
+[![GitHub stars](https://img.shields.io/github/stars/Coding-Dev-Tools/datamorph?style=social)](https://github.com/Coding-Dev-Tools/datamorph/stargazers)
+
 **Batch data format converter** with streaming support for files over 10GB.
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://pypi.org/project/datamorph/)
