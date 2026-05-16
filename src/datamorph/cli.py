@@ -12,6 +12,7 @@ from rich.console import Console
 from rich.table import Table
 
 from . import __version__
+from revenueholdings_core import check_license_and_limit, LicenseError
 from .converters import (
     convert,
     convert_batch,
@@ -41,6 +42,12 @@ def cli() -> None:
 
         datamorph schema input.parquet
     """
+    # License gate
+    ok, _claims, msg = check_license_and_limit("datamorph")
+    if not ok:
+        from rich.console import Console
+        Console(stderr=True).print(f"[red]Access denied:[/red] {msg}")
+        raise SystemExit(1)
 
 
 # ── convert ──────────────────────────────────────────────────────────

@@ -30,6 +30,7 @@ dependencies = [
     "pandas>=2.0.0",
     "pyarrow>=12.0.0",
     "fastavro>=1.8.0",
+    "revenueholdings-core>=0.1.0",
 ]
 
 [project.optional-dependencies]
