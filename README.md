@@ -1,16 +1,15 @@
 # DataMorph CLI
 
+> **Batch data format converter** — stream files over 10GB between CSV, JSON, Parquet, YAML, Avro, and more.
+
 [![GitHub stars](https://img.shields.io/github/stars/Coding-Dev-Tools/datamorph?style=social)](https://github.com/Coding-Dev-Tools/datamorph/stargazers)
-
-**Batch data format converter** with streaming support for files over 10GB.
-
-[![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://pypi.org/project/datamorph/)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![CI](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/test.yml/badge.svg)](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/test.yml)
-[![PyPI](https://img.shields.io/pypi/v/datamorph)](https://pypi.org/project/datamorph/)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/Coding-Dev-Tools/datamorph/blob/main/LICENSE)
 [![Open Source Alternative](https://img.shields.io/badge/Open_Source_Alternative-%E2%87%92-blue?logo=opensourceinitiative)](https://www.opensourcealternative.to/project/datamorph)
 [![LibHunt](https://img.shields.io/badge/LibHunt-%E2%87%92-blue?logo=codeigniter)](https://www.libhunt.com/r/Coding-Dev-Tools/datamorph)
-[![Awesome Python](https://img.shields.io/badge/Awesome_Python-%E2%87%92-blue?logo=python)](https://github.com/uhub/awesome-python)
+
+> ⭐ **Star this repo** if you work with data formats — it helps other developers find DataMorph!
 
 Part of the [Revenue Holdings](https://coding-dev-tools.github.io/revenueholdings.dev/) developer tool ecosystem.
 
@@ -70,7 +69,7 @@ datamorph formats
 |------|-------|----------|
 | **Free** | $0 | CLI only, 100 conversions/mo |
 | **Pro** | $12/mo | Unlimited conversions, streaming, batch mode, all formats |
-| **Suite** | $49/mo | All 8 Revenue Holdings tools |
+| **Suite** | $49/mo | All 10 Revenue Holdings tools |
 
 Get a license key at [revenueholdings.dev/pricing](https://coding-dev-tools.github.io/revenueholdings.dev/pricing.html).
 
