@@ -72,3 +72,12 @@ pytest tests/ -v
 ## License
 
 MIT — [Revenue Holdings](https://coding-dev-tools.github.io/revenueholdings.dev/)
+
+
+## Install via npm
+
+```bash
+npm install -g datamorph-cli
+```
+
+Then run: `datamorph --help`
