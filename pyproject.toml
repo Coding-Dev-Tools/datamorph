@@ -27,7 +27,7 @@ dependencies = [
     "click>=8.1.0",
     "rich>=13.0.0",
     "pyyaml>=6.0",
-    "pandas>=2.0.0",
+    "pandas>=2.3.3",
     "pyarrow>=12.0.0",
     "fastavro>=1.8.0",
 ]
