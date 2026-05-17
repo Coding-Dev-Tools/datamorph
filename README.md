@@ -32,6 +32,18 @@ Data format conversion shouldn't require a custom script every time. CSV to Parq
 pip install datamorph
 ```
 
+Or install via Homebrew (macOS/Linux):
+```bash
+brew tap Coding-Dev-Tools/tap
+brew install datamorph
+```
+
+Or install via Scoop (Windows):
+```bash
+scoop bucket add Coding-Dev-Tools https://github.com/Coding-Dev-Tools/scoop-bucket
+scoop install datamorph
+```
+
 ## Quick Start
 
 ```bash
