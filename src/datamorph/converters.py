@@ -513,3 +513,113 @@ def _format_to_extension(fmt: str) -> str:
         "avro": ".avro",
     }
     return ext_map.get(fmt, f".{fmt}")
+
+
+# ── Schema Validation ────────────────────────────────────────────────
+
+
+@dataclass
+class ValidationResult:
+    """Result of validating a data file against an expected schema."""
+    valid: bool = True
+    rows_checked: int = 0
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+
+
+def validate(
+    input_path: str | Path,
+    expected_schema: list[dict[str, str]] | None = None,
+    input_format: str | None = None,
+    max_rows: int = 0,
+    strict: bool = False,
+) -> ValidationResult:
+    """Validate a data file against an expected schema.
+
+    Args:
+        input_path: Path to the data file.
+        expected_schema: List of {"name": ..., "type": ...} dicts. If None,
+            the schema is inferred from the file and only structural checks
+            (file readable, consistent columns) are performed.
+        input_format: Format override (auto-detected if None).
+        max_rows: Maximum rows to check (0 = all).
+        strict: If True, fail on type mismatches. If False, only warn.
+
+    Returns:
+        ValidationResult with validity, errors, and warnings.
+    """
+    result = ValidationResult()
+    input_path = Path(input_path)
+
+    if not input_format:
+        input_format = detect_format(input_path)
+    if not input_format:
+        result.valid = False
+        result.errors.append(f"Could not detect format for: {input_path}")
+        return result
+
+    try:
+        reader = get_reader(input_format)
+    except ValueError as e:
+        result.valid = False
+        result.errors.append(str(e))
+        return result
+
+    # Infer schema from file if none provided
+    if expected_schema is None:
+        expected_schema = reader.infer_schema(input_path)
+        if not expected_schema:
+            result.warnings.append("File appears to be empty or has no detectable schema")
+            return result
+
+    expected_fields = {f["name"]: f["type"] for f in expected_schema}
+
+    # Stream through rows and check
+    rows_checked = 0
+    for row in reader.read_stream(input_path):
+        rows_checked += 1
+
+        # Check for missing fields
+        for field_name in expected_fields:
+            if field_name not in row and strict:
+                result.errors.append(
+                    f"Row {rows_checked}: missing required field '{field_name}'"
+                )
+                result.valid = False
+
+        # Check for unexpected fields (strict mode)
+        if strict:
+            for field_name in row:
+                if field_name not in expected_fields:
+                    result.warnings.append(
+                        f"Row {rows_checked}: unexpected field '{field_name}'"
+                    )
+
+        # Check types on non-None values
+        for field_name, expected_type in expected_fields.items():
+            val = row.get(field_name)
+            if val is None:
+                continue  # nulls are acceptable unless we add nullability checks
+            actual_type = _infer_type(val)
+            if actual_type != expected_type and actual_type != "null":
+                # Check for compatible widening
+                widened = _widen_type(expected_type, actual_type)
+                if widened != expected_type:
+                    msg = (
+                        f"Row {rows_checked}: field '{field_name}' expected "
+                        f"{expected_type} but got {actual_type}"
+                    )
+                    if strict:
+                        result.errors.append(msg)
+                        result.valid = False
+                    else:
+                        result.warnings.append(msg)
+
+        if max_rows > 0 and rows_checked >= max_rows:
+            break
+
+    result.rows_checked = rows_checked
+    if rows_checked == 0 and expected_schema:
+        result.warnings.append("File contains no data rows")
+
+    return result

@@ -21,6 +21,7 @@ from .converters import (
     convert_batch,
     supported_formats,
     detect_format,
+    validate,
 )
 
 console = Console()
@@ -222,6 +223,74 @@ def formats_cmd() -> None:
         table.add_row(fmt, can_read, can_write, can_stream)
 
     console.print(table)
+
+
+# ── validate ─────────────────────────────────────────────────────────
+
+
+@cli.command()
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--format", "-f", "fmt", default=None, help="File format (auto-detected if omitted)")
+@click.option("--schema", "-s", "schema_file", default=None, type=click.Path(exists=True), help="JSON schema file to validate against")
+@click.option("--strict", is_flag=True, help="Strict mode: fail on type mismatches and missing fields")
+@click.option("--max-rows", default=0, type=int, help="Maximum rows to validate (0 = all)")
+@click.option("--json-output", "-j", is_flag=True, help="Output validation result as JSON")
+def validate_cmd(
+    file: str,
+    fmt: str | None,
+    schema_file: str | None,
+    strict: bool,
+    max_rows: int,
+    json_output: bool,
+) -> None:
+    """Validate a data file against an expected schema.
+
+    If no schema file is provided, the schema is inferred from the data
+    and only structural checks (consistent columns, readable format) are
+    performed. Use --strict to fail on type mismatches.
+
+    To create a schema file, use: datamorph schema data.csv --json-output > schema.json
+    """
+    # Load expected schema if provided
+    expected_schema = None
+    if schema_file:
+        with open(schema_file, "r", encoding="utf-8") as f:
+            expected_schema = json.load(f)
+
+    result = validate(
+        file,
+        expected_schema=expected_schema,
+        input_format=fmt,
+        max_rows=max_rows,
+        strict=strict,
+    )
+
+    if json_output:
+        output = {
+            "valid": result.valid,
+            "rows_checked": result.rows_checked,
+            "errors": result.errors,
+            "warnings": result.warnings,
+        }
+        console.print(json.dumps(output, indent=2))
+    else:
+        if result.valid:
+            console.print(f"[green]✓ VALID[/green] — {result.rows_checked} rows checked")
+        else:
+            console.print(f"[red]✗ INVALID[/red] — {result.rows_checked} rows checked")
+
+        if result.errors:
+            console.print("\n[bold red]Errors:[/bold red]")
+            for err in result.errors:
+                console.print(f"  [red]•[/red] {err}")
+
+        if result.warnings:
+            console.print("\n[bold yellow]Warnings:[/bold yellow]")
+            for warn in result.warnings:
+                console.print(f"  [yellow]•[/yellow] {warn}")
+
+    if not result.valid:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -22,7 +22,8 @@ Data format conversion shouldn't require a custom script every time. CSV to Parq
 - **6+ format pairs**: CSV, JSON, JSONL, YAML, Parquet, Avro, Protobuf
 - **Streaming**: Row-by-row processing for files >10GB
 - **Schema inference**: Auto-detect field types from data
-- **CLI commands**: `convert`, `batch`, `schema`, `formats`
+- **Schema validation**: Check data files against expected schemas (CI-friendly)
+- **CLI commands**: `convert`, `batch`, `schema`, `validate`, `formats`
 - **Batch mode**: Convert entire directories at once
 
 ## Installation
@@ -58,6 +59,14 @@ datamorph batch ./csv_data/ ./parquet_data/ --from csv --to parquet --recursive
 # Inspect schema
 datamorph schema data.parquet
 datamorph schema data.csv --json-output
+
+# Validate data against a schema
+datamorph validate data.csv                          # structural check
+datamorph validate data.csv --schema schema.json     # against expected schema
+datamorph validate data.csv --strict --json-output   # strict mode, JSON output (CI)
+
+# Export schema for validation
+datamorph schema data.csv --json-output > schema.json
 
 # List supported formats
 datamorph formats
