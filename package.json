@@ -1,0 +1,33 @@
+{
+  "name": "datamorph-cli",
+  "version": "0.1.0",
+  "description": "Declarative data transformation pipeline tool. Transform, filter, and reshape data with YAML/JSON configs.",
+  "author": "Revenue Holdings <engineering@revenueholdings.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Coding-Dev-Tools/datamorph.git"
+  },
+  "homepage": "https://github.com/Coding-Dev-Tools/datamorph#readme",
+  "bugs": {
+    "url": "https://github.com/Coding-Dev-Tools/datamorph/issues"
+  },
+  "bin": {
+    "datamorph": "cli.js"
+  },
+  "keywords": [
+    "data",
+    "etl",
+    "transformation",
+    "pipeline",
+    "cli",
+    "yaml"
+  ],
+  "files": [
+    "cli.js"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "preferGlobal": true
+}
