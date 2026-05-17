@@ -1,6 +1,10 @@
-"""pytest configuration — add project src to Python path."""
+"""pytest configuration — add project src to Python path and skip rate limits."""
+import os
 import sys
 from pathlib import Path
+
+# Bypass license rate limiting during tests
+os.environ.setdefault("REVENUEHOLDINGS_SKIP_LIMIT", "1")
 
 # Add user site-packages for dependencies installed outside venv
 import site
