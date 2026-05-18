@@ -9,9 +9,14 @@ import yaml
 
 from datamorph.cli import cli
 from datamorph.converters import (
+    ConversionResult,
+    _infer_type,
+    _widen_type,
     convert,
+    convert_batch,
     detect_format,
     get_reader,
+    get_writer,
     supported_formats,
 )
 
@@ -366,6 +371,21 @@ class TestCLI:
         ])
         assert result.exit_code == 0
 
+    def test_convert_with_stream_flag(self, runner, sample_csv, tmp_path):
+        output = tmp_path / "out.json"
+        result = runner.invoke(cli, [
+            "convert", str(sample_csv), str(output),
+            "--stream",
+        ])
+        assert result.exit_code == 0
+        assert "Converted" in result.output
+
+    def test_formats_show_streaming(self, runner):
+        result = runner.invoke(cli, ["formats"])
+        assert result.exit_code == 0
+        assert "csv" in result.output
+        assert "jsonl" in result.output  # jsonl listed as streaming-capable
+
 
 # ── Multi-format Roundtrips ──────────────────────────────────────────
 
@@ -410,3 +430,141 @@ class TestRoundtrips:
 
         lines = output.read_text().strip().split("\n")
         assert len(lines) == 1001  # 1000 data + 1 header
+
+
+# ── JSONL (JSON Lines) ────────────────────────────────────────────────
+
+
+class TestJsonlConversion:
+    def test_jsonl_to_json(self, tmp_path):
+        path = tmp_path / "data.jsonl"
+        path.write_text(
+            json.dumps({"name": "Alice", "age": 30}) + "\n"
+            + json.dumps({"name": "Bob", "age": 25}) + "\n"
+        )
+        output = tmp_path / "out.json"
+        result = convert(path, output)
+        assert not result.errors
+        assert result.rows_written == 2
+        data = json.loads(output.read_text())
+        assert len(data) == 2
+        assert data[0]["name"] == "Alice"
+
+    def test_jsonl_to_csv(self, tmp_path):
+        path = tmp_path / "data.jsonl"
+        path.write_text(
+            json.dumps({"name": "Alice", "age": 30}) + "\n"
+            + json.dumps({"name": "Bob", "age": 25}) + "\n"
+        )
+        output = tmp_path / "out.csv"
+        result = convert(path, output)
+        assert not result.errors
+        assert result.rows_written == 2
+        content = output.read_text()
+        assert "Alice" in content
+        assert "name" in content
+
+    def test_csv_to_jsonl(self, sample_csv, tmp_path):
+        output = tmp_path / "out.jsonl"
+        result = convert(sample_csv, output)
+        assert not result.errors
+        assert result.rows_written == 3
+        lines = output.read_text().strip().split("\n")
+        assert len(lines) == 3
+        data = json.loads(lines[0])
+        assert data["name"] == "Alice"
+
+    def test_jsonl_empty(self, tmp_path):
+        path = tmp_path / "empty.jsonl"
+        path.write_text("")
+        output = tmp_path / "out.json"
+        result = convert(path, output)
+        assert not result.errors
+        assert result.rows_written == 0
+
+
+# ── Batch Conversion ──────────────────────────────────────────────────
+
+
+class TestBatchConversion:
+    def test_batch_single_file(self, sample_csv, tmp_path):
+        input_dir = sample_csv.parent
+        output_dir = tmp_path / "batch_out"
+        results = convert_batch(
+            str(input_dir), str(output_dir),
+            "csv", "json", pattern="test.csv",
+        )
+        assert len(results) >= 1
+        assert not results[0].errors
+        assert results[0].rows_written == 3
+        assert (output_dir / "test.json").exists()
+
+    def test_batch_no_matches(self, tmp_path):
+        input_dir = tmp_path / "empty_dir"
+        input_dir.mkdir()
+        output_dir = tmp_path / "batch_out"
+        results = convert_batch(
+            str(input_dir), str(output_dir),
+            "csv", "json", pattern="*.csv",
+        )
+        assert results == []
+
+
+# ── Type inference ────────────────────────────────────────────────────
+
+
+class TestTypeInference:
+    def test_infer_bool(self):
+        assert _infer_type(True) == "bool"
+        assert _infer_type(False) == "bool"
+
+    def test_infer_int(self):
+        assert _infer_type(42) == "int64"
+        assert _infer_type(0) == "int64"
+        assert _infer_type(-1) == "int64"
+
+    def test_infer_float(self):
+        assert _infer_type(3.14) == "float64"
+        assert _infer_type(0.0) == "float64"
+
+    def test_infer_string(self):
+        assert _infer_type("hello") == "string"
+        assert _infer_type("") == "string"
+
+    def test_infer_date_string(self):
+        assert _infer_type("2024-01-15") == "date"
+        assert _infer_type("2026-05-18") == "date"
+
+    def test_infer_none(self):
+        assert _infer_type(None) == "null"
+
+    def test_infer_other(self):
+        assert _infer_type([1, 2, 3]) == "string"
+        assert _infer_type({"key": "val"}) == "string"
+
+
+class TestTypeWidening:
+    def test_widen_identical(self):
+        assert _widen_type("int64", "int64") == "int64"
+        assert _widen_type("string", "string") == "string"
+
+    def test_widen_int_to_float(self):
+        assert _widen_type("int64", "float64") == "float64"
+        assert _widen_type("float64", "int64") == "float64"
+
+    def test_widen_to_string(self):
+        assert _widen_type("int64", "string") == "string"
+        assert _widen_type("string", "int64") == "string"
+        assert _widen_type("float64", "string") == "string"
+        assert _widen_type("bool", "string") == "string"
+
+    def test_widen_from_null(self):
+        assert _widen_type("null", "int64") == "int64"
+        assert _widen_type("null", "float64") == "float64"
+        assert _widen_type("null", "string") == "string"
+        assert _widen_type("null", "bool") == "bool"
+        assert _widen_type("null", "date") == "date"
+
+    def test_widen_unrelated(self):
+        assert _widen_type("date", "int64") == "string"
+        assert _widen_type("int64", "date") == "string"
