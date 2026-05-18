@@ -5,7 +5,7 @@
 **Batch data format converter** — stream files over 10GB between CSV, JSON, Parquet, YAML, Avro, and more.
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
-[![CI](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/test.yml/badge.svg)](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/test.yml)
+[![CI](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/ci.yml/badge.svg)](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/Coding-Dev-Tools/datamorph/blob/main/LICENSE)
 [![Open Source Alternative](https://img.shields.io/badge/Open_Source_Alternative-%E2%87%92-blue?logo=opensourceinitiative)](https://www.opensourcealternative.to/project/datamorph)
 [![LibHunt](https://img.shields.io/badge/LibHunt-%E2%87%92-blue?logo=codeigniter)](https://www.libhunt.com/r/Coding-Dev-Tools/datamorph)
