@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import sys
-from pathlib import Path
 from typing import Any
 
 import click
@@ -12,6 +11,7 @@ from rich.console import Console
 from rich.table import Table
 
 from . import __version__
+
 try:
     from revenueholdings_core import check_license_and_limit
 except ImportError:
@@ -19,8 +19,8 @@ except ImportError:
 from .converters import (
     convert,
     convert_batch,
-    supported_formats,
     detect_format,
+    supported_formats,
     validate,
 )
 
@@ -144,7 +144,7 @@ def batch_cmd(
     success = [r for r in results if not r.errors]
     failed = [r for r in results if r.errors]
 
-    console.print(f"\n[bold]Batch Conversion Complete[/bold]")
+    console.print("\n[bold]Batch Conversion Complete[/bold]")
     console.print(f"  Files: {len(success)} converted, {len(failed)} failed")
 
     if failed:
@@ -231,7 +231,10 @@ def formats_cmd() -> None:
 @cli.command()
 @click.argument("file", type=click.Path(exists=True))
 @click.option("--format", "-f", "fmt", default=None, help="File format (auto-detected if omitted)")
-@click.option("--schema", "-s", "schema_file", default=None, type=click.Path(exists=True), help="JSON schema file to validate against")
+@click.option(
+    "--schema", "-s", "schema_file", default=None,
+    type=click.Path(exists=True), help="JSON schema file to validate against",
+)
 @click.option("--strict", is_flag=True, help="Strict mode: fail on type mismatches and missing fields")
 @click.option("--max-rows", default=0, type=int, help="Maximum rows to validate (0 = all)")
 @click.option("--json-output", "-j", is_flag=True, help="Output validation result as JSON")

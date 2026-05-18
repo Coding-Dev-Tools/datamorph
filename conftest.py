@@ -8,6 +8,7 @@ os.environ.setdefault("REVENUEHOLDINGS_SKIP_LIMIT", "1")
 
 # Add user site-packages for dependencies installed outside venv
 import site
+
 user_site = site.getusersitepackages()
 if user_site and user_site not in sys.path:
     sys.path.insert(0, user_site)
