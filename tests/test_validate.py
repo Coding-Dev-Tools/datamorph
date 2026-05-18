@@ -186,3 +186,33 @@ class TestValidateCLI:
         result = runner.invoke(cli, ["validate", "--help"])
         assert result.exit_code == 0
         assert "schema" in result.output.lower()
+
+    def test_validate_with_format_override(self, runner, tmp_path):
+        """Validate a file with explicit --format flag (no extension-based detection)."""
+        path = tmp_path / "data.unknown"
+        path.write_text("name,age\nAlice,30\nBob,25\n")
+        result = runner.invoke(cli, [
+            "validate", str(path),
+            "--format", "csv",
+        ])
+        assert result.exit_code == 0
+        assert "VALID" in result.output
+        assert "2 rows checked" in result.output
+
+    def test_validate_with_format_and_schema(self, runner, tmp_path):
+        """Validate with both --format and --schema overrides."""
+        data_file = tmp_path / "data.unknown"
+        data_file.write_text("name,age\nAlice,30\nBob,25\n")
+        schema_file = tmp_path / "schema.json"
+        import json
+        schema_file.write_text(json.dumps([
+            {"name": "name", "type": "string"},
+            {"name": "age", "type": "string"},
+        ]))
+        result = runner.invoke(cli, [
+            "validate", str(data_file),
+            "--format", "csv",
+            "--schema", str(schema_file),
+        ])
+        assert result.exit_code == 0
+        assert "VALID" in result.output
