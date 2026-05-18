@@ -12,7 +12,7 @@
 
 > ⭐ **Star this repo** if you work with data formats — it helps other developers find DataMorph!
 
-Part of the [DevForge](https://coding-dev-tools.github.io/devforge/) developer tool ecosystem.
+Part of the [Revenue Holdings](https://coding-dev-tools.github.io/revenueholdings.dev/) developer tool ecosystem.
 
 ## Why DataMorph?
 
@@ -150,16 +150,16 @@ datamorph batch ./raw_data/ ./processed/ --from csv --to parquet
 |------|-------|----------|
 | **Free** | $0 | CLI only, 100 conversions/mo |
 | **Pro** | $12/mo | Unlimited conversions, streaming, batch mode, all formats |
-| **Suite** | $49/mo | All 11 DevForge tools |
+| **Suite** | $49/mo | All 11 Revenue Holdings tools |
 
 Get a license key at [devforge.dev/pricing](https://coding-dev-tools.github.io/devforge/pricing.html).
 
 ---
 
 <p align="center">
-  <sub>Part of <a href="https://coding-dev-tools.github.io/devforge/">DevForge</a> — a suite of 11 developer CLI tools built by autonomous AI agents. Also check out <a href="https://github.com/Coding-Dev-Tools/configdrift">ConfigDrift</a> (config drift detection), <a href="https://github.com/Coding-Dev-Tools/schemaforge">SchemaForge</a> (ORM/schema conversion), <a href="https://github.com/Coding-Dev-Tools/envault">Envault</a> (env sync/secret rotation), <a href="https://github.com/Coding-Dev-Tools/api-contract-guardian">API Contract Guardian</a> (breaking change detection), <a href="https://github.com/Coding-Dev-Tools/apighost">APIGhost</a> (mock servers), <a href="https://github.com/Coding-Dev-Tools/deploydiff">DeployDiff</a> (infrastructure diffs), <a href="https://github.com/Coding-Dev-Tools/json2sql">json2sql</a> (JSON → SQL), <a href="https://github.com/Coding-Dev-Tools/click-to-mcp">click-to-mcp</a> (CLI → MCP server), and <a href="https://github.com/Coding-Dev-Tools/deadcode">DeadCode</a> (dead code cleanup).</sub>
+  <sub>Part of <a href="https://coding-dev-tools.github.io/revenueholdings.dev/">Revenue Holdings</a> — a suite of 11 developer CLI tools built by autonomous AI agents. Also check out <a href="https://github.com/Coding-Dev-Tools/configdrift">ConfigDrift</a> (config drift detection), <a href="https://github.com/Coding-Dev-Tools/schemaforge">SchemaForge</a> (ORM/schema conversion), <a href="https://github.com/Coding-Dev-Tools/envault">Envault</a> (env sync/secret rotation), <a href="https://github.com/Coding-Dev-Tools/api-contract-guardian">API Contract Guardian</a> (breaking change detection), <a href="https://github.com/Coding-Dev-Tools/apighost">APIGhost</a> (mock servers), <a href="https://github.com/Coding-Dev-Tools/deploydiff">DeployDiff</a> (infrastructure diffs), <a href="https://github.com/Coding-Dev-Tools/json2sql">json2sql</a> (JSON → SQL), <a href="https://github.com/Coding-Dev-Tools/click-to-mcp">click-to-mcp</a> (CLI → MCP server), and <a href="https://github.com/Coding-Dev-Tools/deadcode">DeadCode</a> (dead code cleanup).</sub>
 </p>
 
 ## License
 
-MIT — [DevForge](https://coding-dev-tools.github.io/devforge/)
+MIT — [Revenue Holdings](https://coding-dev-tools.github.io/revenueholdings.dev/)
