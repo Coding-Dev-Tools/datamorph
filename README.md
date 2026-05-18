@@ -1,8 +1,10 @@
- DataMorph CLI
+# DataMorph CLI
 
 [![GitHub stars](https://img.shields.io/github/stars/Coding-Dev-Tools/datamorph?style=social)](https://github.com/Coding-Dev-Tools/datamorph/stargazers)
 
 **Batch data format converter** — stream files over 10GB between CSV, JSON, Parquet, YAML, Avro, and more.
+
+> ⭐ **Star this repo** if you work with data files — it helps other devs find DataMorph!
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![CI](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/ci.yml/badge.svg)](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/ci.yml)
