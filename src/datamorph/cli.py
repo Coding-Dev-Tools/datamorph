@@ -67,7 +67,6 @@ def cli() -> None:
 @click.option("--output-format", "-of", default=None, help="Output format (auto-detected from extension if omitted)")
 @click.option("--pretty", "-p", is_flag=True, help="Pretty-print JSON output")
 @click.option("--csv-delimiter", default=",", help="CSV delimiter (default: comma)")
-@click.option("--stream", is_flag=True, help="Use streaming mode (row-by-row, lower memory)")
 def convert_cmd(
     input: str,
     output: str,
@@ -75,7 +74,6 @@ def convert_cmd(
     output_format: str | None,
     pretty: bool,
     csv_delimiter: str,
-    stream: bool,
 ) -> None:
     """Convert INPUT file to OUTPUT format."""
     writer_kwargs: dict[str, Any] = {}
@@ -89,7 +87,6 @@ def convert_cmd(
         output,
         input_format=input_format,
         output_format=output_format,
-        stream=stream,
         **writer_kwargs,
     )
 

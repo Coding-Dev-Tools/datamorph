@@ -398,7 +398,6 @@ def convert(
     output_path: str | Path,
     input_format: str | None = None,
     output_format: str | None = None,
-    stream: bool = False,
     **writer_kwargs: Any,
 ) -> ConversionResult:
     """Convert a file from one format to another.
@@ -408,7 +407,6 @@ def convert(
         output_path: Destination file path.
         input_format: Source format (auto-detected from extension if None).
         output_format: Target format (auto-detected from extension if None).
-        stream: If True, use streaming (row-by-row) conversion.
         **writer_kwargs: Additional kwargs passed to the format writer.
 
     Returns:
