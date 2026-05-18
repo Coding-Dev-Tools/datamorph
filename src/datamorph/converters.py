@@ -438,13 +438,11 @@ def convert(
         field_names = [s["name"] for s in schema]
         writer.set_field_order(field_names)
     elif output_format == "csv":
-        # Get field order from first few rows for CSV header
+        # Get field order from first row for CSV header
         sample = reader.read_stream(input_path)
         try:
             first_row = next(sample)
             writer.set_field_order(list(first_row.keys()))
-            # We consumed the first row, so we need to chain it back
-            sample = _prepend_row(sample, first_row)
         except StopIteration:
             pass
 
@@ -492,12 +490,6 @@ def convert_batch(
         results.append(result)
 
     return results
-
-
-def _prepend_row(stream: RowStream, row: Row) -> RowStream:
-    """Prepend a row to a stream (for re-inserting a consumed first row)."""
-    yield row
-    yield from stream
 
 
 def _format_to_extension(fmt: str) -> str:
