@@ -129,9 +129,28 @@ class TestCsvConversion:
         path.write_text("name|age\nAlice|30\nBob|25\n")
         output = tmp_path / "out.json"
         result = convert(path, output, csv_delimiter="|")
-        # The csv_delimiter as a special param — let me check this
-        # It's passed to the writer but we need to handle it in convert()
         assert not result.errors
+        assert result.rows_written == 2
+        data = json.loads(output.read_text())
+        assert data[0]["name"] == "Alice"
+        assert data[1]["age"] == "25"
+
+    def test_csv_custom_delimiter_roundtrip(self, tmp_path):
+        """Verify pipe-delimited CSV can be read and written back."""
+        csv_path = tmp_path / "data.csv"
+        csv_path.write_text("name|age\nAlice|30\nBob|25\n")
+        json_path = tmp_path / "intermediate.json"
+        result = convert(csv_path, json_path, csv_delimiter="|")
+        assert not result.errors
+        assert result.rows_written == 2
+
+        csv_out = tmp_path / "roundtrip.csv"
+        result = convert(json_path, csv_out, csv_delimiter="|")
+        assert not result.errors
+        assert result.rows_written == 2
+        content = csv_out.read_text()
+        assert "Alice" in content
+        assert "name|age" in content  # pipe-delimited header preserved
 
 
 # ── JSON ──────────────────────────────────────────────────────────────

@@ -38,11 +38,11 @@ def supported_formats() -> list[str]:
     return sorted(set(_READERS.keys()) | set(_WRITERS.keys()))
 
 
-def get_reader(name: str) -> "FormatReader":
+def get_reader(name: str, **kwargs: Any) -> "FormatReader":
     cls = _READERS.get(name)
     if not cls:
         raise ValueError(f"Unsupported format for reading: {name}. Supported: {', '.join(_READERS.keys())}")
-    return cls()
+    return cls(**kwargs)
 
 
 def get_writer(name: str, **kwargs: Any) -> "FormatWriter":
@@ -177,9 +177,13 @@ def _widen_type(a: str, b: str) -> str:
 
 
 class CsvReader(FormatReader):
+    def __init__(self, delimiter: str = ",") -> None:
+        super().__init__()
+        self.delimiter = delimiter
+
     def read_stream(self, path: str | Path) -> RowStream:
         with open(path, "r", newline="", encoding="utf-8-sig") as f:
-            reader = csv.DictReader(f)
+            reader = csv.DictReader(f, delimiter=self.delimiter)
             for row in reader:
                 yield {k.strip(): v.strip() if v else None for k, v in row.items()}
 
@@ -428,8 +432,15 @@ def convert(
     result.input_format = input_format
     result.output_format = output_format
 
-    # Get reader and writer
-    reader = get_reader(input_format)
+    # Normalize csv_delimiter to delimiter for consistency
+    if "csv_delimiter" in writer_kwargs:
+        writer_kwargs.setdefault("delimiter", writer_kwargs.pop("csv_delimiter"))
+
+    # Get reader and writer (pass writer_kwargs that apply to reader, like csv delimiter)
+    reader_kwargs: dict[str, Any] = {}
+    if input_format == "csv" and "delimiter" in writer_kwargs:
+        reader_kwargs["delimiter"] = writer_kwargs["delimiter"]
+    reader = get_reader(input_format, **reader_kwargs)
     writer = get_writer(output_format, **writer_kwargs)
 
     # If writing to parquet/avro, we may need field order from schema
