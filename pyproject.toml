@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=82.0.1", "wheel"]
+requires = ["setuptools>=68.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -27,8 +27,8 @@ dependencies = [
     "click>=8.4.0",
     "rich>=13.0.0",
     "pyyaml>=6.0.3",
-    "pandas>=2.3.3",
-    "pyarrow>=24.0.0",
+    "pandas>=2.0.0",
+    "pyarrow>=14.0.0",
     "fastavro>=1.12.2",
 ]
 
