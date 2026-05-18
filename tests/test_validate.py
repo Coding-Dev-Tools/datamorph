@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
-from datamorph.converters import validate, ValidationResult
 from datamorph.cli import cli
-
+from datamorph.converters import ValidationResult, validate
 
 # ── Fixtures ──────────────────────────────────────────────────────────
 

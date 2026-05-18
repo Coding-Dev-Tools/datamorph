@@ -7,14 +7,11 @@ All conversions are streaming-safe (row-by-row for text formats, row-group for c
 from __future__ import annotations
 
 import csv
-import io
 import json
-import os
-import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterator
+from typing import Any, Generator
 
 # ── Types ────────────────────────────────────────────────────────────
 
