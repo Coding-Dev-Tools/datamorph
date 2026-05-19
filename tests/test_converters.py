@@ -494,6 +494,52 @@ class TestJsonlConversion:
 # ── Batch Conversion ──────────────────────────────────────────────────
 
 
+# ── Writer kwarg leak regression ──────────────────────────────────────
+
+
+class TestWriterKwargLeak:
+    """Regression tests for delimiter kwarg leaking to non-CSV writers."""
+
+    def test_csv_delimiter_to_parquet(self, tmp_path):
+        """csv_delimiter should not crash when converting to Parquet."""
+        csv_path = tmp_path / "data.csv"
+        csv_path.write_text("name|age\nAlice|30\nBob|25\n")
+        out_path = tmp_path / "out.parquet"
+        result = convert(csv_path, out_path, csv_delimiter="|")
+        assert not result.errors
+        assert result.rows_written == 2
+
+    def test_csv_delimiter_to_avro(self, tmp_path):
+        """csv_delimiter should not crash when converting to Avro."""
+        csv_path = tmp_path / "data.csv"
+        csv_path.write_text("name|age\nAlice|30\nBob|25\n")
+        out_path = tmp_path / "out.avro"
+        result = convert(csv_path, out_path, csv_delimiter="|")
+        assert not result.errors
+        assert result.rows_written == 2
+
+    def test_csv_delimiter_to_yaml(self, tmp_path):
+        """csv_delimiter should not crash when converting to YAML."""
+        csv_path = tmp_path / "data.csv"
+        csv_path.write_text("name|age\nAlice|30\nBob|25\n")
+        out_path = tmp_path / "out.yaml"
+        result = convert(csv_path, out_path, csv_delimiter="|")
+        assert not result.errors
+        assert result.rows_written == 2
+
+    def test_csv_delimiter_to_jsonl(self, tmp_path):
+        """csv_delimiter should not crash when converting to JSONL."""
+        csv_path = tmp_path / "data.csv"
+        csv_path.write_text("name|age\nAlice|30\nBob|25\n")
+        out_path = tmp_path / "out.jsonl"
+        result = convert(csv_path, out_path, csv_delimiter="|")
+        assert not result.errors
+        assert result.rows_written == 2
+
+
+# ── Batch Conversion ──────────────────────────────────────────────────
+
+
 class TestBatchConversion:
     def test_batch_single_file(self, sample_csv, tmp_path):
         input_dir = sample_csv.parent

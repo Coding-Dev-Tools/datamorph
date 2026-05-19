@@ -431,15 +431,25 @@ def convert(
     result.output_format = output_format
 
     # Normalize csv_delimiter to delimiter for consistency
-    if "csv_delimiter" in writer_kwargs:
-        writer_kwargs.setdefault("delimiter", writer_kwargs.pop("csv_delimiter"))
+    all_kwargs: dict[str, Any] = dict(writer_kwargs)
+    if "csv_delimiter" in all_kwargs:
+        all_kwargs.setdefault("delimiter", all_kwargs.pop("csv_delimiter"))
 
-    # Get reader and writer (pass writer_kwargs that apply to reader, like csv delimiter)
-    reader_kwargs: dict[str, Any] = {}
-    if input_format == "csv" and "delimiter" in writer_kwargs:
-        reader_kwargs["delimiter"] = writer_kwargs["delimiter"]
+    # Filter kwargs so only format-relevant ones reach each constructor
+    _READER_KWARGS: dict[str, set[str]] = {"csv": {"delimiter"}}
+    _WRITER_KWARGS: dict[str, set[str]] = {"csv": {"delimiter"}, "json": {"indent"}}
+
+    reader_kwargs: dict[str, Any] = {
+        k: v for k, v in all_kwargs.items()
+        if k in _READER_KWARGS.get(input_format, set())
+    }
+    filtered_writer_kwargs: dict[str, Any] = {
+        k: v for k, v in all_kwargs.items()
+        if k in _WRITER_KWARGS.get(output_format, set())
+    }
+
     reader = get_reader(input_format, **reader_kwargs)
-    writer = get_writer(output_format, **writer_kwargs)
+    writer = get_writer(output_format, **filtered_writer_kwargs)
 
     # If writing to parquet/avro, we may need field order from schema
     if output_format in ("parquet", "avro"):
