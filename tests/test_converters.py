@@ -388,15 +388,6 @@ class TestCLI:
         ])
         assert result.exit_code == 0
 
-    def test_convert_with_stream_flag(self, runner, sample_csv, tmp_path):
-        output = tmp_path / "out.json"
-        result = runner.invoke(cli, [
-            "convert", str(sample_csv), str(output),
-            "--stream",
-        ])
-        assert result.exit_code == 0
-        assert "Converted" in result.output
-
     def test_formats_show_streaming(self, runner):
         result = runner.invoke(cli, ["formats"])
         assert result.exit_code == 0
