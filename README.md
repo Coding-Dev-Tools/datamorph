@@ -9,9 +9,10 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![CI](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/ci.yml/badge.svg)](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/Coding-Dev-Tools/datamorph/blob/main/LICENSE)
-[![Open Source Alternative](https://img.shields.io/badge/Open_Source_Alternative-%E2%87%92-blue?logo=opensourceinitiative)](https://www.opensourcealternative.to/project/datamorph)
+|[![Open Source Alternative](https://img.shields.io/badge/Open_Source_Alternative-%E2%87%92-blue?logo=opensourceinitiative)](https://www.opensourcealternative.to/project/datamorph)
+[![PyPI](https://img.shields.io/pypi/v/datamorph-cli)](https://pypi.org/project/datamorph-cli/)
 
-> ⭐ **Star this repo** if you work with data formats — it helps other developers find DataMorph!
+
 
 Part of the [Revenue Holdings](https://coding-dev-tools.github.io/revenueholdings.dev/) developer tool ecosystem.
 
@@ -153,7 +154,7 @@ datamorph batch ./raw_data/ ./processed/ --from csv --to parquet
 | **Pro** | $12/mo | Unlimited conversions, streaming, batch mode, all formats |
 | **Suite** | $49/mo ($39/mo annual) | All 11 Revenue Holdings tools |
 
-Get a license key at [devforge.dev/pricing](https://coding-dev-tools.github.io/devforge/pricing.html).
+Get a license key at [devforge.dev/pricing](https://coding-dev-tools.github.io/revenueholdings.dev/pricing.html).
 
 ---
 
