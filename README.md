@@ -9,12 +9,13 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![CI](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/ci.yml/badge.svg)](https://github.com/Coding-Dev-Tools/datamorph/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/Coding-Dev-Tools/datamorph/blob/main/LICENSE)
-|[![Open Source Alternative](https://img.shields.io/badge/Open_Source_Alternative-%E2%87%92-blue?logo=opensourceinitiative)](https://www.opensourcealternative.to/project/datamorph)
-[![PyPI](https://img.shields.io/pypi/v/datamorph-cli)](https://pypi.org/project/datamorph-cli/)
+[![Open Source Alternative](https://img.shields.io/badge/Open_Source_Alternative-%E2%87%92-blue?logo=opensourceinitiative)](https://www.opensourcealternative.to/project/datamorph)
+|[![LibHunt](https://img.shields.io/badge/LibHunt-%E2%87%92-blue?logo=codeigniter)](https://www.libhunt.com/r/Coding-Dev-Tools/datamorph)
+|[![PyPI](https://img.shields.io/pypi/v/datamorph-cli)](https://pypi.org/project/datamorph-cli/)
 
+> ⭐ **Star this repo** if you work with data formats
 
-
-Part of the [Revenue Holdings](https://coding-dev-tools.github.io/revenueholdings.dev/) developer tool ecosystem.
+Part of the [Revenue Holdings](https://coding-dev-tools.github.io/devforge/) developer tool ecosystem.
 
 ## Why DataMorph?
 
@@ -154,14 +155,14 @@ datamorph batch ./raw_data/ ./processed/ --from csv --to parquet
 | **Pro** | $12/mo | Unlimited conversions, streaming, batch mode, all formats |
 | **Suite** | $49/mo ($39/mo annual) | All 11 Revenue Holdings tools |
 
-Get a license key at [devforge.dev/pricing](https://coding-dev-tools.github.io/revenueholdings.dev/pricing.html).
+Get a license key at [revenueholdings.dev/pricing](https://coding-dev-tools.github.io/devforge/pricing.html).
 
 ---
 
 <p align="center">
-  <sub>Part of <a href="https://coding-dev-tools.github.io/revenueholdings.dev/">Revenue Holdings</a> — a suite of 11 developer CLI tools built by autonomous AI agents. Also check out <a href="https://github.com/Coding-Dev-Tools/configdrift">ConfigDrift</a> (config drift detection), <a href="https://github.com/Coding-Dev-Tools/schemaforge">SchemaForge</a> (ORM/schema conversion), <a href="https://github.com/Coding-Dev-Tools/envault">Envault</a> (env sync/secret rotation), <a href="https://github.com/Coding-Dev-Tools/api-contract-guardian">API Contract Guardian</a> (breaking change detection), <a href="https://github.com/Coding-Dev-Tools/apighost">APIGhost</a> (mock servers), <a href="https://github.com/Coding-Dev-Tools/deploydiff">DeployDiff</a> (infrastructure diffs), <a href="https://github.com/Coding-Dev-Tools/json2sql">json2sql</a> (JSON → SQL), <a href="https://github.com/Coding-Dev-Tools/click-to-mcp">click-to-mcp</a> (CLI → MCP server), and <a href="https://github.com/Coding-Dev-Tools/deadcode">DeadCode</a> (dead code cleanup).</sub>
+  <sub>Part of <a href="https://coding-dev-tools.github.io/devforge/">Revenue Holdings</a> — a suite of 11 developer CLI tools built by autonomous AI agents. Also check out <a href="https://github.com/Coding-Dev-Tools/configdrift">ConfigDrift</a> (config drift detection), <a href="https://github.com/Coding-Dev-Tools/schemaforge">SchemaForge</a> (ORM/schema conversion), <a href="https://github.com/Coding-Dev-Tools/envault">Envault</a> (env sync/secret rotation), <a href="https://github.com/Coding-Dev-Tools/api-contract-guardian">API Contract Guardian</a> (breaking change detection), <a href="https://github.com/Coding-Dev-Tools/apighost">APIGhost</a> (mock servers), <a href="https://github.com/Coding-Dev-Tools/deploydiff">DeployDiff</a> (infrastructure diffs), <a href="https://github.com/Coding-Dev-Tools/json2sql">json2sql</a> (JSON → SQL), <a href="https://github.com/Coding-Dev-Tools/click-to-mcp">click-to-mcp</a> (CLI → MCP server), and <a href="https://github.com/Coding-Dev-Tools/deadcode">DeadCode</a> (dead code cleanup).</sub>
 </p>
 
 ## License
 
-MIT — [Revenue Holdings](https://coding-dev-tools.github.io/revenueholdings.dev/)
+MIT — [Revenue Holdings](https://coding-dev-tools.github.io/devforge/)
