@@ -214,9 +214,9 @@ def formats_cmd() -> None:
 
     all_formats = supported_formats()
     for fmt in all_formats:
-        can_read = "✓" if fmt in _READERS else ""
-        can_write = "✓" if fmt in _WRITERS else ""
-        can_stream = "✓" if fmt in ("csv", "jsonl", "avro") else ""
+        can_read = "yes" if fmt in _READERS else ""
+        can_write = "yes" if fmt in _WRITERS else ""
+        can_stream = "yes" if fmt in ("csv", "jsonl", "avro") else ""
         table.add_row(fmt, can_read, can_write, can_stream)
 
     console.print(table)
