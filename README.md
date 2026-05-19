@@ -152,7 +152,7 @@ datamorph batch ./raw_data/ ./processed/ --from csv --to parquet
 |------|-------|----------|
 | **Free** | $0 | CLI only, 100 conversions/mo |
 | **Pro** | $12/mo | Unlimited conversions, streaming, batch mode, all formats |
-| **Suite** | $49/mo | All 11 Revenue Holdings tools |
+| **Suite** | $49/mo ($39/mo annual) | All 11 Revenue Holdings tools |
 
 Get a license key at [devforge.dev/pricing](https://coding-dev-tools.github.io/devforge/pricing.html).
 
