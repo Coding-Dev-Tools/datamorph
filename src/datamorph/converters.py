@@ -334,14 +334,29 @@ class AvroWriter(FormatWriter):
         if not rows_list:
             return 0
 
-        # Infer schema from first row
+        # Infer schema across all rows for proper type detection
+        # (handles nullable fields, mixed types, etc.)
+        schema_data = _infer_schema_from_rows(rows_list)
+
+        # Detect which fields contain null values
+        nullable_fields: set[str] = set()
+        for row in rows_list:
+            for field in schema_data:
+                fn = field["name"]
+                if fn in row and row[fn] is None:
+                    nullable_fields.add(fn)
+
+        fields: list[dict[str, Any]] = []
+        for field in schema_data:
+            avro_type = _avro_type_for_schema(field["type"])
+            if field["name"] in nullable_fields and avro_type != "null":
+                avro_type = ["null", avro_type]
+            fields.append({"name": field["name"], "type": avro_type})
+
         schema = {
             "type": "record",
             "name": "Record",
-            "fields": [
-                {"name": k, "type": _avro_type(v)}
-                for k, v in rows_list[0].items()
-            ],
+            "fields": fields,
         }
 
         with open(path, "wb") as f:
@@ -349,17 +364,17 @@ class AvroWriter(FormatWriter):
         return len(rows_list)
 
 
-def _avro_type(val: Any) -> str | list:
-    if isinstance(val, bool):
-        return "boolean"
-    elif isinstance(val, int):
-        return "long"
-    elif isinstance(val, float):
-        return "double"
-    elif val is None:
-        return "null"
-    else:
-        return "string"
+def _avro_type_for_schema(schema_type: str) -> str:
+    """Map internal schema type to Avro schema type."""
+    mapping = {
+        "int64": "long",
+        "float64": "double",
+        "bool": "boolean",
+        "string": "string",
+        "date": "string",
+        "null": "null",
+    }
+    return mapping.get(schema_type, "string")
 
 
 # ── Protobuf Reader/Writer (optional) ─────────────────────────────────

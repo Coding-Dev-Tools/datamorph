@@ -272,6 +272,58 @@ class TestAvroConversion:
         assert not result.errors
         assert result.rows_written == 3
 
+    def test_avro_nullable_first_row(self, tmp_path):
+        """Avro should handle nullable fields even when the first row has nulls."""
+        path = tmp_path / "data.csv"
+        path.write_text("name,age,email\nAlice,,alice@test.com\nBob,30,\nCharlie,25,charlie@test.com\n")
+        avro_file = tmp_path / "out.avro"
+        result = convert(path, avro_file)
+        assert not result.errors
+        assert result.rows_written == 3
+
+        # Roundtrip back to CSV to verify data integrity
+        csv_out = tmp_path / "roundtrip.csv"
+        result = convert(avro_file, csv_out)
+        assert not result.errors
+        assert result.rows_written == 3
+        content = csv_out.read_text()
+        assert "Alice" in content
+        assert "Bob" in content
+        assert "Charlie" in content
+
+    def test_avro_nullable_all_but_first(self, tmp_path):
+        """Avro should handle nullable fields where nulls appear after the first row."""
+        path = tmp_path / "data.csv"
+        path.write_text("name,age\nAlice,30\nBob,\nCharlie,35\n")
+        avro_file = tmp_path / "out.avro"
+        result = convert(path, avro_file)
+        assert not result.errors
+        assert result.rows_written == 3
+
+        # Roundtrip back to verify
+        csv_out = tmp_path / "roundtrip.csv"
+        result = convert(avro_file, csv_out)
+        assert not result.errors
+        assert result.rows_written == 3
+        content = csv_out.read_text()
+        # Nulls should be preserved as empty in CSV
+        assert "Alice,30" in content or "Alice" in content
+
+    def test_avro_all_nullable_fields(self, tmp_path):
+        """Avro should handle rows where ALL field values are nullable."""
+        path = tmp_path / "data.csv"
+        path.write_text("name,score\nAlice,\nBob,\n")
+        avro_file = tmp_path / "out.avro"
+        result = convert(path, avro_file)
+        assert not result.errors
+        assert result.rows_written == 2
+
+        # Roundtrip back
+        csv_out = tmp_path / "roundtrip.csv"
+        result = convert(avro_file, csv_out)
+        assert not result.errors
+        assert result.rows_written == 2
+
 
 # ── Error Handling ────────────────────────────────────────────────────
 
