@@ -388,6 +388,32 @@ class TestCLI:
         ])
         assert result.exit_code == 0
 
+    def test_batch_with_files(self, runner, sample_csv, tmp_path):
+        """Batch CLI with actual CSV files converts correctly."""
+        out_dir = tmp_path / "batch_out"
+        result = runner.invoke(cli, [
+            "batch", str(sample_csv.parent), str(out_dir),
+            "--from", "csv", "--to", "json",
+        ])
+        assert result.exit_code == 0
+        assert "1 converted" in result.output or "1 files" in result.output
+        assert (out_dir / "test.json").exists()
+
+    def test_batch_with_custom_delimiter(self, runner, tmp_path):
+        """Batch CLI with custom CSV delimiter."""
+        src = tmp_path / "input"
+        src.mkdir()
+        csv_file = src / "data.csv"
+        csv_file.write_text("name|age\nAlice|30\nBob|25\n")
+        out_dir = tmp_path / "out"
+        result = runner.invoke(cli, [
+            "batch", str(src), str(out_dir),
+            "--from", "csv", "--to", "json",
+            "--csv-delimiter", "|",
+        ])
+        assert result.exit_code == 0
+        assert (out_dir / "data.json").exists()
+
     def test_formats_show_streaming(self, runner):
         result = runner.invoke(cli, ["formats"])
         assert result.exit_code == 0
