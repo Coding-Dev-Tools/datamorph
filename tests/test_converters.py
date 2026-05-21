@@ -432,6 +432,54 @@ class TestCLI:
         out_files = list(output_dir.glob("*.parquet"))
         assert len(out_files) >= 1
 
+    def test_batch_to_jsonl(self, runner, sample_csv, tmp_path):
+        """Batch convert CSV files to JSONL via CLI."""
+        output_dir = tmp_path / "jsonl_out"
+        result = runner.invoke(cli, [
+            "batch", str(sample_csv.parent), str(output_dir),
+            "--from", "csv", "--to", "jsonl",
+        ])
+        assert result.exit_code == 0
+        out_files = list(output_dir.glob("*.jsonl"))
+        assert len(out_files) >= 1
+        content = out_files[0].read_text()
+        assert content.count("\n") >= 1  # at least one complete JSONL line
+
+    def test_batch_csv_delimiter(self, runner, tmp_path):
+        """Batch convert CSV with custom delimiter via CLI."""
+        subdir = tmp_path / "data"
+        subdir.mkdir()
+        csv_file = subdir / "data.csv"
+        csv_file.write_text("name|age\nAlice|30\nBob|25\n")
+        output_dir = tmp_path / "json_out"
+        result = runner.invoke(cli, [
+            "batch", str(subdir), str(output_dir),
+            "--from", "csv", "--to", "json",
+            "--csv-delimiter", "|",
+        ])
+        assert result.exit_code == 0
+        out_files = list(output_dir.glob("*.json"))
+        assert len(out_files) >= 1
+        data = json.loads(out_files[0].read_text())
+        if isinstance(data, list):
+            assert len(data) >= 1
+
+    def test_batch_pattern_no_match(self, runner, tmp_path):
+        """Batch convert with pattern that matches no files."""
+        subdir = tmp_path / "data"
+        subdir.mkdir()
+        csv_file = subdir / "data.csv"
+        csv_file.write_text("name,age\nAlice,30\n")
+        output_dir = tmp_path / "out"
+        result = runner.invoke(cli, [
+            "batch", str(subdir), str(output_dir),
+            "--from", "csv", "--to", "json",
+            "--pattern", "*.tsv",
+        ])
+        assert result.exit_code == 0  # graceful no-op
+        out_files = list(output_dir.glob("*"))
+        assert len(out_files) == 0
+
     def test_formats_show_streaming(self, runner):
         result = runner.invoke(cli, ["formats"])
         assert result.exit_code == 0
