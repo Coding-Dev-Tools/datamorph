@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 import yaml
@@ -393,6 +394,34 @@ class TestCLI:
         assert result.exit_code == 0
         assert "csv" in result.output
         assert "jsonl" in result.output  # jsonl listed as streaming-capable
+
+    def test_main_module_invocation(self, runner):
+        """python -m datamorph should work (loads __main__.py)."""
+        import subprocess
+        import sys
+        result = subprocess.run(
+            [sys.executable, "-m", "datamorph", "--version"],
+            capture_output=True, text=True, cwd=str(Path(__file__).parent.parent),
+        )
+        assert result.returncode == 0
+        assert "0.1.1" in result.stdout
+
+    def test_convert_pretty_flag(self, runner, sample_csv, tmp_path):
+        """--pretty flag should produce indented JSON."""
+        output = tmp_path / "pretty.json"
+        result = runner.invoke(cli, ["convert", str(sample_csv), str(output), "--pretty"])
+        assert result.exit_code == 0
+        content = output.read_text()
+        # Pretty-printed JSON has indentation
+        assert "\n" in content
+        data = json.loads(content)
+        assert len(data) == 3
+
+    def test_schema_sample_option(self, runner, sample_csv):
+        """--sample option should limit rows used for inference."""
+        result = runner.invoke(cli, ["schema", str(sample_csv), "--sample", "1"])
+        assert result.exit_code == 0
+        assert "name" in result.output
 
 
 # ── Multi-format Roundtrips ──────────────────────────────────────────

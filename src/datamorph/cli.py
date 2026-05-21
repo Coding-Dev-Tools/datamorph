@@ -52,8 +52,7 @@ def cli() -> None:
     else:
         ok, msg = True, ""  # License check skipped (dev/CI mode)
     if not ok:
-        from rich.console import Console
-        Console(stderr=True).print(f"[red]Access denied:[/red] {msg}")
+        err_console.print(f"[red]Access denied:[/red] {msg}")
         raise SystemExit(1)
 
 
