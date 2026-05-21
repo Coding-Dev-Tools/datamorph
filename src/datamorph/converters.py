@@ -341,17 +341,17 @@ class AvroWriter(FormatWriter):
         # Detect which fields contain null values
         nullable_fields: set[str] = set()
         for row in rows_list:
-            for field in schema_data:
-                fn = field["name"]
+            for f in schema_data:
+                fn = f["name"]
                 if fn in row and row[fn] is None:
                     nullable_fields.add(fn)
 
         fields: list[dict[str, Any]] = []
-        for field in schema_data:
-            avro_type = _avro_type_for_schema(field["type"])
-            if field["name"] in nullable_fields and avro_type != "null":
+        for f in schema_data:
+            avro_type = _avro_type_for_schema(f["type"])
+            if f["name"] in nullable_fields and avro_type != "null":
                 avro_type = ["null", avro_type]
-            fields.append({"name": field["name"], "type": avro_type})
+            fields.append({"name": f["name"], "type": avro_type})
 
         schema = {
             "type": "record",
