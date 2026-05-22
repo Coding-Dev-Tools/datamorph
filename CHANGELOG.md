@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- Fix ruff F402 lint error by renaming shadowed loop variable (`field` → `s_field`)
+  in `AvroWriter` schema iteration.
+
+### Removed
+- Remove dead `npm-publish.yml` GitHub Actions workflow (datamorph is a Python CLI
+  tool, has no `package.json`, and the workflow would fail on every release).
+
 ## [0.1.1] — 2026-05-18
 
 ### Fixed
