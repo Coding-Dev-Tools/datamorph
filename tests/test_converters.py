@@ -190,6 +190,21 @@ class TestJsonConversion:
         assert not result.errors
         assert result.rows_written == 1
 
+    def test_json_dict_of_dicts(self, tmp_path):
+        """JSON with dict-of-dicts structure (keyed objects)."""
+        path = tmp_path / "nested.json"
+        path.write_text(json.dumps({
+            "a": {"name": "Alice", "age": 30},
+            "b": {"name": "Bob", "age": 25},
+        }))
+        output = tmp_path / "out.csv"
+        result = convert(path, output)
+        assert not result.errors
+        assert result.rows_written == 2
+        content = output.read_text()
+        assert "Alice" in content
+        assert "Bob" in content
+
 
 # ── YAML ──────────────────────────────────────────────────────────────
 
@@ -242,6 +257,16 @@ class TestParquetConversion:
         assert not result.errors
         assert result.rows_written == 3
 
+    def test_parquet_write_empty(self, tmp_path):
+        """Writing empty dataset to Parquet should produce a valid empty file."""
+        from datamorph.converters import ParquetWriter
+        writer = ParquetWriter()
+        path = tmp_path / "empty.parquet"
+        count = writer.write_stream(iter([]), path)
+        assert count == 0
+        assert path.exists()
+        assert path.stat().st_size > 0  # valid parquet has header/footer
+
 
 # ── Avro ──────────────────────────────────────────────────────────────
 
@@ -271,6 +296,14 @@ class TestAvroConversion:
         result = convert(avro_file, output)
         assert not result.errors
         assert result.rows_written == 3
+
+    def test_avro_write_empty(self, tmp_path):
+        """Writing empty dataset to Avro should return 0 without error."""
+        from datamorph.converters import AvroWriter
+        writer = AvroWriter()
+        path = tmp_path / "empty.avro"
+        count = writer.write_stream(iter([]), path)
+        assert count == 0
 
     def test_avro_nullable_first_row(self, tmp_path):
         """Avro should handle nullable fields even when the first row has nulls."""
@@ -353,6 +386,15 @@ class TestErrors:
         result = convert(path, output)
         assert not result.errors
         assert result.rows_written == 0
+
+    def test_undetectable_input_format_errors(self, tmp_path):
+        """If input has no recognizable extension and no override, return error."""
+        path = tmp_path / "input.xyz"
+        path.write_text("some,data\n")
+        output = tmp_path / "out.json"
+        result = convert(path, output)
+        assert result.errors
+        assert "Could not detect input format" in result.errors[0]
 
 
 # ── Schema Inference ──────────────────────────────────────────────────
@@ -740,6 +782,13 @@ class TestTypeInference:
         assert _infer_type([1, 2, 3]) == "string"
         assert _infer_type({"key": "val"}) == "string"
 
+    def test_infer_invalid_date_string(self):
+        # String with date-like format but invalid date — falls through to "string"
+        assert _infer_type("2024-13-01") == "string"
+        assert _infer_type("2024-00-15") == "string"
+        assert _infer_type("not-a-date") == "string"
+        assert _infer_type("1234-56-78") == "string"
+
 
 class TestTypeWidening:
     def test_widen_identical(self):
@@ -766,3 +815,30 @@ class TestTypeWidening:
     def test_widen_unrelated(self):
         assert _widen_type("date", "int64") == "string"
         assert _widen_type("int64", "date") == "string"
+
+
+# ── Avro Writer type mapping ────────────────────────────────────────────
+
+
+class TestAvroTypeMapping:
+    """Unit tests for _avro_type type mapping."""
+
+    def test_avro_type_bool(self):
+        from datamorph.converters import _avro_type
+        assert _avro_type(True) == "boolean"
+
+    def test_avro_type_int(self):
+        from datamorph.converters import _avro_type
+        assert _avro_type(42) == "long"
+
+    def test_avro_type_float(self):
+        from datamorph.converters import _avro_type
+        assert _avro_type(3.14) == "double"
+
+    def test_avro_type_none(self):
+        from datamorph.converters import _avro_type
+        assert _avro_type(None) == "null"
+
+    def test_avro_type_string(self):
+        from datamorph.converters import _avro_type
+        assert _avro_type("hello") == "string"
