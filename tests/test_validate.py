@@ -273,3 +273,40 @@ class TestValidateCLI:
         ])
         assert result.exit_code == 0
         assert "VALID" in result.output
+
+    def test_validate_invalid_non_json_shows_error_text(self, runner, tmp_path):
+        """Invalid validation in non-JSON mode shows 'INVALID' and error details."""
+        data_file = tmp_path / "data.csv"
+        data_file.write_text("name,age\nAlice,30\n")
+        schema_file = tmp_path / "schema.json"
+        import json
+        schema_file.write_text(json.dumps([
+            {"name": "name", "type": "string"},
+            {"name": "missing_field", "type": "string"},
+        ]))
+        result = runner.invoke(cli, [
+            "validate", str(data_file),
+            "--schema", str(schema_file),
+            "--strict",
+        ])
+        assert result.exit_code != 0
+        assert "INVALID" in result.output
+        assert "missing_field" in result.output or "required" in result.output
+
+    def test_validate_non_json_with_warnings(self, runner, tmp_path):
+        """Non-JSON output shows warnings when present."""
+        schema_file = tmp_path / "schema.json"
+        import json
+        schema_file.write_text(json.dumps([
+            {"name": "name", "type": "string"},
+        ]))
+        data_file = tmp_path / "data.csv"
+        data_file.write_text("name,extra\nAlice,unexpected\n")
+        result = runner.invoke(cli, [
+            "validate", str(data_file),
+            "--schema", str(schema_file),
+            "--strict",
+        ])
+        assert result.exit_code == 0
+        assert "VALID" in result.output
+        assert "unexpected" in result.output or "Warning" in result.output.lower() or "extra" in result.output
