@@ -364,6 +364,19 @@ class AvroWriter(FormatWriter):
         return len(rows_list)
 
 
+def _avro_type(value: Any) -> str:
+    """Map a Python value to its Avro schema type."""
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, int):
+        return "long"
+    if isinstance(value, float):
+        return "double"
+    return "string"
+
+
 def _avro_type_for_schema(schema_type: str) -> str:
     """Map internal schema type to Avro schema type."""
     mapping = {
