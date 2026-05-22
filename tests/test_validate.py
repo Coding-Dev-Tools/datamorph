@@ -91,6 +91,63 @@ class TestValidateFunction:
         result = validate(sample_csv, max_rows=2)
         assert result.rows_checked == 2
 
+    def test_truly_empty_file(self, tmp_path):
+        """File with absolutely no content should warn about empty schema."""
+        path = tmp_path / "empty.csv"
+        path.write_text("")  # Empty file, not even headers
+        result = validate(path)
+        assert result.warnings
+        assert any("no detectable schema" in w.lower() for w in result.warnings)
+
+    def test_empty_file_with_schema(self, tmp_path):
+        """File with headers but no data rows, validated against expected schema."""
+        schema = [
+            {"name": "name", "type": "string"},
+            {"name": "age", "type": "string"},
+        ]
+        path = tmp_path / "data.csv"
+        path.write_text("name,age\n")  # Header only
+        result = validate(path, expected_schema=schema)
+        assert result.valid
+        assert result.rows_checked == 0
+        assert any("no data rows" in w.lower() for w in result.warnings)
+
+    def test_validate_reader_error(self, tmp_path):
+        """Unsupported format should raise reader error via validate()."""
+        path = tmp_path / "data.txt"
+        path.write_text("some content")
+        # Use a format name that has no registered reader
+        result = validate(path, input_format="exe")
+        assert not result.valid
+        assert result.errors
+
+    def test_strict_unexpected_field_warning(self, tmp_path):
+        """Strict mode should warn about unexpected fields not in expected schema."""
+        schema = [
+            {"name": "name", "type": "string"},
+        ]
+        path = tmp_path / "data.csv"
+        path.write_text("name,extra_field\nAlice,unexpected\n")
+        result = validate(path, expected_schema=schema, strict=True)
+        # Should still be valid (warnings only for unexpected fields, not errors)
+        # The unexpected field is a warning, not an error
+        assert result.warnings
+        assert any("unexpected field" in w for w in result.warnings)
+
+    def test_non_strict_unexpected_field_ignored(self, tmp_path):
+        """Non-strict mode should not warn about unexpected fields."""
+        schema = [
+            {"name": "name", "type": "string"},
+        ]
+        path = tmp_path / "data.csv"
+        path.write_text("name,extra_field\nAlice,unexpected\n")
+        result = validate(path, expected_schema=schema, strict=False)
+        # Should be valid with no warnings about unexpected fields
+        assert result.valid
+        # May have other warnings, but none about unexpected fields
+        unexpected_warnings = [w for w in result.warnings if "unexpected field" in w]
+        assert len(unexpected_warnings) == 0
+
     def test_strict_mode_missing_field(self, tmp_path):
         """Strict mode should fail when expected field is missing."""
         schema = [
