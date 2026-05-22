@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 import yaml
@@ -595,6 +596,162 @@ class TestTypeInference:
     def test_infer_other(self):
         assert _infer_type([1, 2, 3]) == "string"
         assert _infer_type({"key": "val"}) == "string"
+
+
+# ── Edge-case format detection ──────────────────────────────────────
+
+
+class TestDetectFormatEdgeCases:
+    """Tests for less common format extensions."""
+
+    def test_avsc_is_avro(self):
+        assert detect_format("schema.avsc") == "avro"
+
+    def test_pq_is_parquet(self):
+        assert detect_format("data.pq") == "parquet"
+
+    def test_pbf_is_protobuf(self):
+        assert detect_format("msg.pbf") == "protobuf"
+
+    def test_proto_is_protobuf(self):
+        assert detect_format("msg.proto") == "protobuf"
+
+    def test_yml_is_yaml(self):
+        assert detect_format("data.yml") == "yaml"
+
+    def test_jsonl_extension(self):
+        assert detect_format("data.jsonl") == "jsonl"
+
+    def test_uppercase_extension(self):
+        """detect_format lowercases the extension."""
+        assert detect_format("DATA.CSV") == "csv"
+        assert detect_format("Data.Json") == "json"
+
+    def test_no_extension(self):
+        assert detect_format("README") is None
+
+    def test_double_extension(self):
+        assert detect_format("archive.tar.gz") is None
+
+
+# ── convert() with explicit format overrides ─────────────────────────
+
+
+class TestConvertWithFormatOverride:
+    """Test convert() with explicit input_format/output_format overrides."""
+
+    def test_format_override_output(self, sample_csv, tmp_path):
+        """Write CSV data to a file with .txt extension but json format."""
+        output = tmp_path / "output.txt"
+        result = convert(sample_csv, output, output_format="json")
+        assert not result.errors
+        assert result.rows_written == 3
+        assert result.output_format == "json"
+        data = json.loads(output.read_text())
+        assert len(data) == 3
+
+    def test_format_override_input(self, sample_json, tmp_path):
+        """Read JSON from a file with .dat extension."""
+        renamed = tmp_path / "data.dat"
+        renamed.write_text(sample_json.read_text())
+        output = tmp_path / "out.csv"
+        result = convert(renamed, output, input_format="json")
+        assert not result.errors
+        assert result.rows_written == 3
+        assert result.input_format == "json"
+
+    def test_format_override_both(self, sample_csv, tmp_path):
+        """Override both formats explicitly."""
+        output = tmp_path / "output.dat"
+        result = convert(sample_csv, output, input_format="csv", output_format="yaml")
+        assert not result.errors
+        assert result.rows_written == 3
+
+    def test_undetectable_output_format_errors(self, sample_csv, tmp_path):
+        """If output has no recognizable extension and no override, return error."""
+        output = tmp_path / "output.xyz"
+        result = convert(sample_csv, output)
+        assert result.errors
+        assert "Could not detect output format" in result.errors[0]
+
+
+# ── convert_batch() recursive unit test ───────────────────────────────
+
+
+class TestBatchConversionRecursive:
+    """Unit tests for convert_batch with recursive=True."""
+
+    def test_recursive_finds_nested_files(self, tmp_path):
+        """convert_batch with recursive should find files in subdirectories."""
+        subdir = tmp_path / "input" / "nested"
+        subdir.mkdir(parents=True)
+        csv_file = subdir / "data.csv"
+        csv_file.write_text("name,age\nAlice,30\nBob,25\n")
+
+        output_dir = tmp_path / "output"
+        results = convert_batch(
+            str(tmp_path / "input"), str(output_dir),
+            "csv", "json", recursive=True,
+        )
+        assert len(results) == 1
+        assert not results[0].errors
+        assert results[0].rows_written == 2
+        # Verify output preserves directory structure
+        out_file = output_dir / "nested" / "data.json"
+        assert out_file.exists()
+
+    def test_recursive_vs_non_recursive(self, tmp_path):
+        """Non-recursive should not find files in subdirectories."""
+        subdir = tmp_path / "input" / "sub"
+        subdir.mkdir(parents=True)
+        csv_file = subdir / "data.csv"
+        csv_file.write_text("name,age\nAlice,30\n")
+
+        output_dir = tmp_path / "output"
+        results = convert_batch(
+            str(tmp_path / "input"), str(output_dir),
+            "csv", "json", recursive=False,
+        )
+        assert len(results) == 0
+
+    def test_recursive_multiple_levels(self, tmp_path):
+        """Recursive should find files at multiple nesting levels."""
+        input_dir = tmp_path / "input"
+        level1 = input_dir / "l1"
+        level2 = input_dir / "l1" / "l2"
+        level1.mkdir(parents=True)
+        level2.mkdir(parents=True)
+
+        (input_dir / "top.csv").write_text("name\nTop\n")
+        (level1 / "mid.csv").write_text("name\nMid\n")
+        (level2 / "deep.csv").write_text("name\nDeep\n")
+
+        output_dir = tmp_path / "output"
+        results = convert_batch(
+            str(input_dir), str(output_dir),
+            "csv", "json", recursive=True,
+        )
+        assert len(results) == 3
+        assert all(not r.errors for r in results)
+
+
+# ── __main__.py invocation ─────────────────────────────────────────────
+
+
+class TestMainModule:
+    """Test that python -m datamorph works."""
+
+    def test_main_module_runs(self, runner):
+        """python -m datamorph should invoke the CLI."""
+        import subprocess
+        import sys
+        result = subprocess.run(
+            [sys.executable, "-m", "datamorph", "--version"],
+            capture_output=True, text=True, timeout=10,
+            cwd=str(Path(__file__).parent.parent),
+        )
+        assert result.returncode == 0
+        assert "0.1.1" in result.stdout
 
 
 class TestTypeWidening:
