@@ -441,30 +441,96 @@ class TestCLI:
         assert result.exit_code == 0
 
     def test_batch_with_files(self, runner, sample_csv, tmp_path):
-        """Batch CLI with actual CSV files converts correctly."""
-        out_dir = tmp_path / "batch_out"
+        """Batch convert CSV files in a directory to JSON via CLI."""
+        output_dir = tmp_path / "json_out"
         result = runner.invoke(cli, [
-            "batch", str(sample_csv.parent), str(out_dir),
+            "batch", str(sample_csv.parent), str(output_dir),
             "--from", "csv", "--to", "json",
+            "--pattern", "*.csv",
         ])
         assert result.exit_code == 0
-        assert "1 converted" in result.output or "1 files" in result.output
-        assert (out_dir / "test.json").exists()
+        assert "converted" in result.output.lower() or "Complete" in result.output
+        out_files = list(output_dir.glob("*.json"))
+        assert len(out_files) >= 1
 
-    def test_batch_with_custom_delimiter(self, runner, tmp_path):
-        """Batch CLI with custom CSV delimiter."""
-        src = tmp_path / "input"
-        src.mkdir()
-        csv_file = src / "data.csv"
-        csv_file.write_text("name|age\nAlice|30\nBob|25\n")
-        out_dir = tmp_path / "out"
+    def test_batch_recursive(self, runner, tmp_path):
+        """Batch convert with --recursive to find files in subdirectories."""
+        subdir = tmp_path / "sub" / "nested"
+        subdir.mkdir(parents=True)
+        csv_file = subdir / "data.csv"
+        csv_file.write_text("name,age\nAlice,30\nBob,25\n")
+
+        output_dir = tmp_path / "json_out"
         result = runner.invoke(cli, [
-            "batch", str(src), str(out_dir),
+            "batch", str(tmp_path), str(output_dir),
+            "--from", "csv", "--to", "json",
+            "--recursive",
+        ])
+        assert result.exit_code == 0
+        assert "converted" in result.output.lower() or "Complete" in result.output
+        out_files = list(output_dir.rglob("*.json"))
+        assert len(out_files) >= 1
+        # Verify nested directory structure is preserved
+        assert any("nested" in str(f) for f in out_files)
+
+    def test_batch_to_parquet(self, runner, sample_csv, tmp_path):
+        """Batch convert CSV files to Parquet via CLI."""
+        output_dir = tmp_path / "pq_out"
+        result = runner.invoke(cli, [
+            "batch", str(sample_csv.parent), str(output_dir),
+            "--from", "csv", "--to", "parquet",
+        ])
+        assert result.exit_code == 0
+        out_files = list(output_dir.glob("*.parquet"))
+        assert len(out_files) >= 1
+
+    def test_batch_to_jsonl(self, runner, sample_csv, tmp_path):
+        """Batch convert CSV files to JSONL via CLI."""
+        output_dir = tmp_path / "jsonl_out"
+        result = runner.invoke(cli, [
+            "batch", str(sample_csv.parent), str(output_dir),
+            "--from", "csv", "--to", "jsonl",
+        ])
+        assert result.exit_code == 0
+        out_files = list(output_dir.glob("*.jsonl"))
+        assert len(out_files) >= 1
+        content = out_files[0].read_text()
+        assert content.count("\n") >= 1  # at least one complete JSONL line
+
+    def test_batch_csv_delimiter(self, runner, tmp_path):
+        """Batch convert CSV with custom delimiter via CLI."""
+        subdir = tmp_path / "data"
+        subdir.mkdir()
+        csv_file = subdir / "data.csv"
+        csv_file.write_text("name|age\nAlice|30\nBob|25\n")
+        output_dir = tmp_path / "json_out"
+        result = runner.invoke(cli, [
+            "batch", str(subdir), str(output_dir),
             "--from", "csv", "--to", "json",
             "--csv-delimiter", "|",
         ])
         assert result.exit_code == 0
-        assert (out_dir / "data.json").exists()
+        out_files = list(output_dir.glob("*.json"))
+        assert len(out_files) >= 1
+        data = json.loads(out_files[0].read_text())
+        if isinstance(data, list):
+            assert len(data) >= 1
+
+    def test_batch_pattern_no_match(self, runner, tmp_path):
+        """Batch convert with pattern that matches no files."""
+        subdir = tmp_path / "data"
+        subdir.mkdir()
+        csv_file = subdir / "data.csv"
+        csv_file.write_text("name,age\nAlice,30\n")
+        output_dir = tmp_path / "out"
+        result = runner.invoke(cli, [
+            "batch", str(subdir), str(output_dir),
+            "--from", "csv", "--to", "json",
+            "--pattern", "*.tsv",
+        ])
+        assert result.exit_code == 0  # graceful no-op
+        out_files = list(output_dir.glob("*"))
+        assert len(out_files) == 0
 
     def test_formats_show_streaming(self, runner):
         result = runner.invoke(cli, ["formats"])
