@@ -51,8 +51,14 @@ full = [
 [project.scripts]
 datamorph = "datamorph.cli:cli"
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+datamorph = ["py.typed"]
 
 [tool.ruff]
 target-version = "py310"
@@ -60,6 +66,9 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["datamorph"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
