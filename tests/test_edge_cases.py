@@ -5,10 +5,10 @@ Covers uncovered error-handling paths in CLI, converters, and packaging config.
 
 from __future__ import annotations
 
-import tomllib
-
-from click.testing import CliRunner
 from pathlib import Path
+
+import tomllib
+from click.testing import CliRunner
 
 from datamorph.cli import cli
 from datamorph.converters import ConversionResult, detect_format, get_reader, get_writer
