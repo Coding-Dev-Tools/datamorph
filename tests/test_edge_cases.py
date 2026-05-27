@@ -11,7 +11,7 @@ import tomllib
 from click.testing import CliRunner
 
 from datamorph.cli import cli
-from datamorph.converters import ConversionResult, detect_format, get_reader, get_writer
+from datamorph.converters import detect_format, get_reader, get_writer
 
 
 class TestCLIEdgeCases:
