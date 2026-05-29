@@ -1,6 +1,6 @@
 {
   "name": "datamorph-cli",
-  "version": "1.2.0",
+  "version": "0.1.1",
   "description": "Batch data format converter — stream files between CSV, JSON, Parquet, YAML, Avro, and more. Includes schema inference and validation.",
   "author": "Revenue Holdings <engineering@revenueholdings.dev>",
   "license": "MIT",
