@@ -293,9 +293,11 @@ class ParquetReader(FormatReader):
         import pyarrow.parquet as pq
         pf = pq.ParquetFile(path)
         for batch in pf.iter_batches():
-            table = batch.to_pandas()
-            for _, row in table.iterrows():
-                yield row.where(row.notna(), None).to_dict()
+            # Convert columnar batch to a list of row-dicts without pandas iterrows overhead
+            columns = {col: batch.column(col).to_pylist() for col in batch.schema.names}
+            num_rows = batch.num_rows
+            for i in range(num_rows):
+                yield {col: columns[col][i] for col in columns}
 
 
 class ParquetWriter(FormatWriter):
