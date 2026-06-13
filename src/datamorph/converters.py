@@ -200,7 +200,7 @@ class CsvWriter(FormatWriter):
             for count, row in enumerate(rows, 1):
                 if fieldnames is None:
                     fieldnames = self._field_order or list(row.keys())
-                    writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=self.delimiter)
+                    writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=self.delimiter, extrasaction="ignore")
                     writer.writeheader()
                 writer.writerow(row)
         return count
@@ -484,19 +484,12 @@ def convert(
         schema = reader.infer_schema(input_path)
         field_names = [s["name"] for s in schema]
         writer.set_field_order(field_names)
-    elif output_format == "csv":
-        # Get field order from first row for CSV header
-        sample = reader.read_stream(input_path)
-        try:
-            first_row = next(sample)
-            writer.set_field_order(list(first_row.keys()))
-        except StopIteration:
-            pass
 
     # Convert
     try:
         row_stream = reader.read_stream(input_path)
         result.rows_written = writer.write_stream(row_stream, output_path)
+        result.rows_read = result.rows_written
     except Exception as e:
         result.errors.append(f"Conversion failed: {e}")
 

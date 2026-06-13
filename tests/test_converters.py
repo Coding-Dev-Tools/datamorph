@@ -842,3 +842,90 @@ class TestAvroTypeMapping:
     def test_avro_type_string(self):
         from datamorph.converters import _avro_type
         assert _avro_type("hello") == "string"
+
+
+# ── CsvWriter heterogeneous rows + double-read regression ─────────────
+
+
+class TestCsvWriterRegressions:
+    """Regression tests for CsvWriter correctness fixes."""
+
+    def test_heterogeneous_json_to_csv_no_crash(self, tmp_path):
+        """JSON rows with extra keys beyond the first row must not crash (extrasaction='ignore')."""
+        data = [
+            {"name": "Alice", "age": 30},
+            {"name": "Bob", "age": 25, "score": 99},  # extra field 'score'
+        ]
+        inp = tmp_path / "data.json"
+        inp.write_text(json.dumps(data))
+        out = tmp_path / "out.csv"
+
+        result = convert(inp, out)
+
+        assert not result.errors, f"Unexpected errors: {result.errors}"
+        assert result.rows_written == 2
+        content = out.read_text()
+        # Header must come from first row only
+        assert content.splitlines()[0] == "name,age"
+        # Both rows present; extra 'score' silently dropped
+        assert "Alice" in content
+        assert "Bob" in content
+        assert "score" not in content
+
+    def test_heterogeneous_yaml_to_csv_no_crash(self, tmp_path):
+        """YAML rows with extra keys beyond the first row must not crash."""
+        import yaml as yaml_lib
+        data = [
+            {"x": 1},
+            {"x": 2, "y": 3},  # extra field 'y'
+        ]
+        inp = tmp_path / "data.yaml"
+        inp.write_text(yaml_lib.dump(data))
+        out = tmp_path / "out.csv"
+
+        result = convert(inp, out)
+
+        assert not result.errors, f"Unexpected errors: {result.errors}"
+        assert result.rows_written == 2
+        lines = out.read_text().splitlines()
+        assert lines[0] == "x"          # only first-row fields in header
+        assert "y" not in out.read_text()
+
+    def test_rows_read_populated_on_success(self, sample_csv, tmp_path):
+        """rows_read must equal rows_written after a successful conversion."""
+        out = tmp_path / "out.json"
+        result = convert(sample_csv, out)
+        assert not result.errors
+        assert result.rows_written == 3
+        assert result.rows_read == result.rows_written
+
+    def test_rows_read_zero_on_error(self, tmp_path):
+        """rows_read stays 0 when conversion fails before writing any rows."""
+        inp = tmp_path / "bad.csv"
+        inp.write_text("a,b\n1,2\n")
+        out = tmp_path / "out.unknown_format_xyz"
+        result = convert(inp, out)
+        assert result.errors
+        assert result.rows_read == 0
+
+    def test_no_double_read_for_csv_output(self, tmp_path):
+        """CsvWriter must use field order from first row without requiring a pre-peek.
+
+        Regression: previously convert() peeked the first row of a fresh stream,
+        discarded the rest of that stream, then opened a second stream for conversion
+        -- the file was read twice.  Now CsvWriter.write_stream resolves field order
+        lazily from the first row it receives, so no double-open is needed.
+        """
+        # We verify correctness: all rows arrive (including the first one)
+        data = [{"k": i} for i in range(5)]
+        inp = tmp_path / "data.json"
+        inp.write_text(json.dumps(data))
+        out = tmp_path / "out.csv"
+
+        result = convert(inp, out)
+
+        assert not result.errors
+        assert result.rows_written == 5
+        lines = [l for l in out.read_text().splitlines() if l.strip()]
+        assert lines[0] == "k"          # header present
+        assert len(lines) == 6          # header + 5 data rows
