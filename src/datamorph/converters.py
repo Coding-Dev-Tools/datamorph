@@ -326,7 +326,7 @@ class AvroReader(FormatReader):
         with open(path, "rb") as f:
             reader = fastavro.reader(f)
             for row in reader:
-                yield dict(row)
+                yield dict(row)  # type: ignore[arg-type]
 
 
 class AvroWriter(FormatWriter):
