@@ -45,7 +45,6 @@ dev = [
     "ruff>=0.4.0",
 ]
 full = [
-    "protobuf>=7.34.1",
 ]
 
 [project.scripts]

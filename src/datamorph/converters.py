@@ -1,6 +1,6 @@
 """Data format conversion engine for DataMorph.
 
-Supports: CSV, JSON, YAML, Parquet, Avro, Protobuf (via optional protobuf dep).
+Supports: CSV, JSON, YAML, Parquet, Avro.
 All conversions are streaming-safe (row-by-row for text formats, row-group for columnar).
 """
 
@@ -395,8 +395,6 @@ def _avro_type_for_schema(schema_type: str) -> str:
 
 # Protobuf support requires a compiled .proto file descriptor.
 # We provide a schema-based dynamic approach for well-known structures.
-class ProtobufConversionError(Exception):
-    pass
 
 
 # ── Register all formats ─────────────────────────────────────────────
