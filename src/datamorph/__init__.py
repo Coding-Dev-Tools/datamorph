@@ -1,4 +1,5 @@
 """DataMorph package — batch format converter with streaming."""
+__version__ = "0.1.1"
 from .converters import (
     ConversionResult,
     ValidationResult,
@@ -8,7 +9,6 @@ from .converters import (
     supported_formats,
     validate,
 )
-from . import __version__
 
 __all__ = [
     "__version__",
