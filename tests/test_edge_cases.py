@@ -7,7 +7,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import tomllib
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib  # Python < 3.11 backport
 from click.testing import CliRunner
 
 from datamorph.cli import cli
