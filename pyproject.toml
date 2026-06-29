@@ -9,7 +9,7 @@ description = "CLI tool for batch converting between data formats (CSV, JSON, YA
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-authors = [{name = "Revenue Holdings"}]
+authors = [{name = "DevForge"}]
 keywords = ["data-converter", "csv", "json", "yaml", "parquet", "avro", "etl", "cli"]
 classifiers = [
     "Development Status :: 4 - Beta",

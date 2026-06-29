@@ -31,15 +31,7 @@ def cli() -> None:
     Supports CSV, JSON, JSONL, YAML, Parquet, Avro (and Protobuf with
     optional protobuf package).
 
-    Examples:
-
-        datamorph convert input.csv output.parquet
-
-        datamorph convert input.csv output.json --pretty
-
-        datamorph batch ./data/ --from csv --to parquet
-
-        datamorph schema input.parquet
+    Also try: batch, schema, formats, validate
     """
 
 
