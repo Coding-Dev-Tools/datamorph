@@ -27,9 +27,14 @@ class TestCLIEdgeCases:
         input_file.write_text("a,b,c\n1,2,3\n4,5,6\n")
         output_file = tmp_path / "out.json"
 
-        result = runner.invoke(cli, [
-            "convert", str(input_file), str(output_file),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "convert",
+                str(input_file),
+                str(output_file),
+            ],
+        )
         assert result.exit_code == 0
 
     def test_undetectable_format_exits(self, tmp_path):
@@ -39,9 +44,14 @@ class TestCLIEdgeCases:
         input_file.write_text("some random content\n")
         output_file = tmp_path / "out.json"
 
-        result = runner.invoke(cli, [
-            "convert", str(input_file), str(output_file),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "convert",
+                str(input_file),
+                str(output_file),
+            ],
+        )
         assert result.exit_code != 0
 
     def test_detect_format_none(self):
@@ -70,9 +80,14 @@ class TestCLIEdgeCases:
         input_file.write_text("a,b\n1,2\n")
         output_file = tmp_path / "out.json"
 
-        result = runner.invoke(cli, [
-            "convert", str(input_file), str(output_file),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "convert",
+                str(input_file),
+                str(output_file),
+            ],
+        )
         assert result.exit_code == 0 or "Error" in result.output
 
 
@@ -97,10 +112,18 @@ class TestConverterEdgeCases:
         (input_dir / "test.csv").write_text("a,b\n1,2\n")
         output_dir = tmp_path / "output"
 
-        result = runner.invoke(cli, [
-            "batch", str(input_dir), str(output_dir),
-            "--from", "csv", "--to", "json",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "batch",
+                str(input_dir),
+                str(output_dir),
+                "--from",
+                "csv",
+                "--to",
+                "json",
+            ],
+        )
         assert result.exit_code == 0 or "Error" in result.output
 
     def test_schema_command_basic(self, tmp_path):
@@ -108,9 +131,13 @@ class TestConverterEdgeCases:
         runner = CliRunner()
         input_file = tmp_path / "test.csv"
         input_file.write_text("a,b\n1,2\n")
-        result = runner.invoke(cli, [
-            "schema", str(input_file),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "schema",
+                str(input_file),
+            ],
+        )
         assert result.exit_code == 0
 
     def test_validate_command_basic(self, tmp_path):
@@ -120,9 +147,14 @@ class TestConverterEdgeCases:
         input_file.write_text("a,b\n1,2\n")
         schema_file = tmp_path / "schema.yaml"
         schema_file.write_text("fields:\n  a: int\n  b: int\n")
-        result = runner.invoke(cli, [
-            "validate", str(input_file), str(schema_file),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "validate",
+                str(input_file),
+                str(schema_file),
+            ],
+        )
         assert result.exit_code == 0 or "Error" in result.output
 
 
@@ -135,16 +167,22 @@ class TestPackagingQuality:
         with open(pyproject, "rb") as f:
             data = tomllib.load(f)
         pkg_data = data.get("tool", {}).get("setuptools", {}).get("package-data", {})
-        assert "datamorph" in pkg_data, \
+        assert "datamorph" in pkg_data, (
             "Expected [tool.setuptools.package-data] section for 'datamorph'"
-        assert "py.typed" in pkg_data["datamorph"], \
+        )
+        assert "py.typed" in pkg_data["datamorph"], (
             f"Expected 'py.typed' in package-data, got {pkg_data['datamorph']}"
+        )
 
     def test_ruff_known_first_party(self):
         """ruff known-first-party should be ['datamorph']."""
         pyproject = Path(__file__).parent.parent / "pyproject.toml"
         with open(pyproject, "rb") as f:
             data = tomllib.load(f)
-        isort_cfg = data.get("tool", {}).get("ruff", {}).get("lint", {}).get("isort", {})
+        isort_cfg = (
+            data.get("tool", {}).get("ruff", {}).get("lint", {}).get("isort", {})
+        )
         kfp = isort_cfg.get("known-first-party", [])
-        assert kfp == ["datamorph"], f"known-first-party should be ['datamorph'], got {kfp}"
+        assert kfp == ["datamorph"], (
+            f"known-first-party should be ['datamorph'], got {kfp}"
+        )
