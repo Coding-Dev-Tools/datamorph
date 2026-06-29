@@ -16,7 +16,11 @@ class TestCliErrorPaths:
         """batch subcommand with missing file shows errors."""
         result = runner.invoke(cli, ["batch", "/nonexistent/file.json"])
         assert result.exit_code != 0
-        assert "ERROR" in result.output or "error" in result.output or "Error" in result.output
+        assert (
+            "ERROR" in result.output
+            or "error" in result.output
+            or "Error" in result.output
+        )
 
     def test_detect_no_file(self):
         """detect subcommand with nonexistent file shows error."""
