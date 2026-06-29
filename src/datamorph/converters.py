@@ -24,7 +24,9 @@ _WRITERS: dict[str, type["FormatWriter"]] = {}
 
 
 def register_format(
-    name: str, reader: type["FormatReader"] | None = None, writer: type["FormatWriter"] | None = None
+    name: str,
+    reader: type["FormatReader"] | None = None,
+    writer: type["FormatWriter"] | None = None,
 ) -> None:
     """Register a format reader and/or writer."""
     if reader:
@@ -41,14 +43,18 @@ def supported_formats() -> list[str]:
 def get_reader(name: str, **kwargs: Any) -> "FormatReader":
     cls = _READERS.get(name)
     if not cls:
-        raise ValueError(f"Unsupported format for reading: {name}. Supported: {', '.join(_READERS.keys())}")
+        raise ValueError(
+            f"Unsupported format for reading: {name}. Supported: {', '.join(_READERS.keys())}"
+        )
     return cls(**kwargs)
 
 
 def get_writer(name: str, **kwargs: Any) -> "FormatWriter":
     cls = _WRITERS.get(name)
     if not cls:
-        raise ValueError(f"Unsupported format for writing: {name}. Supported: {', '.join(_WRITERS.keys())}")
+        raise ValueError(
+            f"Unsupported format for writing: {name}. Supported: {', '.join(_WRITERS.keys())}"
+        )
     return cls(**kwargs)
 
 
@@ -86,7 +92,9 @@ class FormatReader(ABC):
         """Read all rows into memory."""
         return list(self.read_stream(path))
 
-    def infer_schema(self, path: str | Path, sample_size: int = 100) -> list[dict[str, str]]:
+    def infer_schema(
+        self, path: str | Path, sample_size: int = 100
+    ) -> list[dict[str, str]]:
         """Infer schema from a sample of rows."""
         rows = []
         for i, row in enumerate(self.read_stream(path)):
@@ -144,6 +152,7 @@ def _infer_type(val: Any) -> str:
         if val and len(val) == 10 and val[4] == "-" and val[7] == "-":
             try:
                 from datetime import date
+
                 date.fromisoformat(val)
                 return "date"
             except (ValueError, IndexError):
@@ -165,6 +174,7 @@ _type_widening: dict[tuple[str, str], str] = {
     ("null", "bool"): "bool",
     ("null", "date"): "date",
 }
+
 
 def _widen_type(a: str, b: str) -> str:
     if a == b:
@@ -200,7 +210,9 @@ class CsvWriter(FormatWriter):
             for count, row in enumerate(rows, 1):
                 if fieldnames is None:
                     fieldnames = self._field_order or list(row.keys())
-                    writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=self.delimiter)
+                    writer = csv.DictWriter(
+                        f, fieldnames=fieldnames, delimiter=self.delimiter
+                    )
                     writer.writeheader()
                 writer.writerow(row)
         return count
@@ -266,6 +278,7 @@ class JsonlWriter(FormatWriter):
 class YamlReader(FormatReader):
     def read_stream(self, path: str | Path) -> RowStream:
         import yaml
+
         with open(path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
         if isinstance(data, list):
@@ -279,9 +292,16 @@ class YamlReader(FormatReader):
 class YamlWriter(FormatWriter):
     def write_stream(self, rows: RowStream, path: str | Path) -> int:
         import yaml
+
         rows_list = list(rows)
         with open(path, "w", encoding="utf-8") as f:
-            yaml.dump(rows_list, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+            yaml.dump(
+                rows_list,
+                f,
+                default_flow_style=False,
+                allow_unicode=True,
+                sort_keys=False,
+            )
         return len(rows_list)
 
 
@@ -291,6 +311,7 @@ class YamlWriter(FormatWriter):
 class ParquetReader(FormatReader):
     def read_stream(self, path: str | Path) -> RowStream:
         import pyarrow.parquet as pq
+
         pf = pq.ParquetFile(path)
         for batch in pf.iter_batches():
             # Convert columnar batch to a list of row-dicts without pandas iterrows overhead
@@ -305,6 +326,7 @@ class ParquetWriter(FormatWriter):
         import pandas as pd
         import pyarrow as pa
         import pyarrow.parquet as pq
+
         rows_list = list(rows)
         if not rows_list:
             # Write empty file with schema
@@ -323,6 +345,7 @@ class ParquetWriter(FormatWriter):
 class AvroReader(FormatReader):
     def read_stream(self, path: str | Path) -> RowStream:
         import fastavro
+
         with open(path, "rb") as f:
             reader = fastavro.reader(f)
             for row in reader:
@@ -332,6 +355,7 @@ class AvroReader(FormatReader):
 class AvroWriter(FormatWriter):
     def write_stream(self, rows: RowStream, path: str | Path) -> int:
         import fastavro
+
         rows_list = list(rows)
         if not rows_list:
             return 0
@@ -470,11 +494,13 @@ def convert(
     _WRITER_KWARGS: dict[str, set[str]] = {"csv": {"delimiter"}, "json": {"indent"}}
 
     reader_kwargs: dict[str, Any] = {
-        k: v for k, v in all_kwargs.items()
+        k: v
+        for k, v in all_kwargs.items()
         if k in _READER_KWARGS.get(input_format, set())
     }
     filtered_writer_kwargs: dict[str, Any] = {
-        k: v for k, v in all_kwargs.items()
+        k: v
+        for k, v in all_kwargs.items()
         if k in _WRITER_KWARGS.get(output_format, set())
     }
 
@@ -535,7 +561,13 @@ def convert_batch(
         )
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        result = convert(str(input_path), str(output_path), input_format, output_format, **writer_kwargs)
+        result = convert(
+            str(input_path),
+            str(output_path),
+            input_format,
+            output_format,
+            **writer_kwargs,
+        )
         results.append(result)
 
     return results
@@ -559,6 +591,7 @@ def _format_to_extension(fmt: str) -> str:
 @dataclass
 class ValidationResult:
     """Result of validating a data file against an expected schema."""
+
     valid: bool = True
     rows_checked: int = 0
     errors: list[str] = field(default_factory=list)
@@ -607,7 +640,9 @@ def validate(
     if expected_schema is None:
         expected_schema = reader.infer_schema(input_path)
         if not expected_schema:
-            result.warnings.append("File appears to be empty or has no detectable schema")
+            result.warnings.append(
+                "File appears to be empty or has no detectable schema"
+            )
             return result
 
     expected_fields = {f["name"]: f["type"] for f in expected_schema}
