@@ -15,6 +15,7 @@ from datamorph.converters import ValidationResult, validate
 @pytest.fixture
 def runner():
     from click.testing import CliRunner
+
     return CliRunner()
 
 
@@ -200,37 +201,56 @@ class TestValidateCLI:
         assert "VALID" in result.output
 
     def test_validate_with_schema(self, runner, sample_csv, schema_file):
-        result = runner.invoke(cli, [
-            "validate", str(sample_csv),
-            "--schema", str(schema_file),
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "validate",
+                str(sample_csv),
+                "--schema",
+                str(schema_file),
+            ],
+        )
         assert result.exit_code == 0
         assert "VALID" in result.output
 
     def test_validate_strict(self, runner, sample_csv, schema_file):
-        result = runner.invoke(cli, [
-            "validate", str(sample_csv),
-            "--schema", str(schema_file),
-            "--strict",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "validate",
+                str(sample_csv),
+                "--schema",
+                str(schema_file),
+                "--strict",
+            ],
+        )
         assert result.exit_code == 0
 
     def test_validate_json_output(self, runner, sample_csv):
-        result = runner.invoke(cli, [
-            "validate", str(sample_csv),
-            "--json-output",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "validate",
+                str(sample_csv),
+                "--json-output",
+            ],
+        )
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert data["valid"] is True
         assert data["rows_checked"] == 3
 
     def test_validate_max_rows(self, runner, sample_csv):
-        result = runner.invoke(cli, [
-            "validate", str(sample_csv),
-            "--max-rows", "2",
-            "--json-output",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "validate",
+                str(sample_csv),
+                "--max-rows",
+                "2",
+                "--json-output",
+            ],
+        )
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert data["rows_checked"] == 2
@@ -248,10 +268,15 @@ class TestValidateCLI:
         """Validate a file with explicit --format flag (no extension-based detection)."""
         path = tmp_path / "data.unknown"
         path.write_text("name,age\nAlice,30\nBob,25\n")
-        result = runner.invoke(cli, [
-            "validate", str(path),
-            "--format", "csv",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "validate",
+                str(path),
+                "--format",
+                "csv",
+            ],
+        )
         assert result.exit_code == 0
         assert "VALID" in result.output
         assert "2 rows checked" in result.output
@@ -262,15 +287,26 @@ class TestValidateCLI:
         data_file.write_text("name,age\nAlice,30\nBob,25\n")
         schema_file = tmp_path / "schema.json"
         import json
-        schema_file.write_text(json.dumps([
-            {"name": "name", "type": "string"},
-            {"name": "age", "type": "string"},
-        ]))
-        result = runner.invoke(cli, [
-            "validate", str(data_file),
-            "--format", "csv",
-            "--schema", str(schema_file),
-        ])
+
+        schema_file.write_text(
+            json.dumps(
+                [
+                    {"name": "name", "type": "string"},
+                    {"name": "age", "type": "string"},
+                ]
+            )
+        )
+        result = runner.invoke(
+            cli,
+            [
+                "validate",
+                str(data_file),
+                "--format",
+                "csv",
+                "--schema",
+                str(schema_file),
+            ],
+        )
         assert result.exit_code == 0
         assert "VALID" in result.output
 
@@ -280,15 +316,25 @@ class TestValidateCLI:
         data_file.write_text("name,age\nAlice,30\n")
         schema_file = tmp_path / "schema.json"
         import json
-        schema_file.write_text(json.dumps([
-            {"name": "name", "type": "string"},
-            {"name": "missing_field", "type": "string"},
-        ]))
-        result = runner.invoke(cli, [
-            "validate", str(data_file),
-            "--schema", str(schema_file),
-            "--strict",
-        ])
+
+        schema_file.write_text(
+            json.dumps(
+                [
+                    {"name": "name", "type": "string"},
+                    {"name": "missing_field", "type": "string"},
+                ]
+            )
+        )
+        result = runner.invoke(
+            cli,
+            [
+                "validate",
+                str(data_file),
+                "--schema",
+                str(schema_file),
+                "--strict",
+            ],
+        )
         assert result.exit_code != 0
         assert "INVALID" in result.output
         assert "missing_field" in result.output or "required" in result.output
@@ -297,16 +343,30 @@ class TestValidateCLI:
         """Non-JSON output shows warnings when present."""
         schema_file = tmp_path / "schema.json"
         import json
-        schema_file.write_text(json.dumps([
-            {"name": "name", "type": "string"},
-        ]))
+
+        schema_file.write_text(
+            json.dumps(
+                [
+                    {"name": "name", "type": "string"},
+                ]
+            )
+        )
         data_file = tmp_path / "data.csv"
         data_file.write_text("name,extra\nAlice,unexpected\n")
-        result = runner.invoke(cli, [
-            "validate", str(data_file),
-            "--schema", str(schema_file),
-            "--strict",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "validate",
+                str(data_file),
+                "--schema",
+                str(schema_file),
+                "--strict",
+            ],
+        )
         assert result.exit_code == 0
         assert "VALID" in result.output
-        assert "unexpected" in result.output or "Warning" in result.output.lower() or "extra" in result.output
+        assert (
+            "unexpected" in result.output
+            or "Warning" in result.output.lower()
+            or "extra" in result.output
+        )
