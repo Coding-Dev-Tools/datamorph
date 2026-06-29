@@ -24,6 +24,7 @@ from datamorph.converters import (
 @pytest.fixture
 def runner():
     from click.testing import CliRunner
+
     return CliRunner()
 
 
@@ -193,10 +194,14 @@ class TestJsonConversion:
     def test_json_dict_of_dicts(self, tmp_path):
         """JSON with dict-of-dicts structure (keyed objects)."""
         path = tmp_path / "nested.json"
-        path.write_text(json.dumps({
-            "a": {"name": "Alice", "age": 30},
-            "b": {"name": "Bob", "age": 25},
-        }))
+        path.write_text(
+            json.dumps(
+                {
+                    "a": {"name": "Alice", "age": 30},
+                    "b": {"name": "Bob", "age": 25},
+                }
+            )
+        )
         output = tmp_path / "out.csv"
         result = convert(path, output)
         assert not result.errors
@@ -260,6 +265,7 @@ class TestParquetConversion:
     def test_parquet_write_empty(self, tmp_path):
         """Writing empty dataset to Parquet should produce a valid empty file."""
         from datamorph.converters import ParquetWriter
+
         writer = ParquetWriter()
         path = tmp_path / "empty.parquet"
         count = writer.write_stream(iter([]), path)
@@ -300,6 +306,7 @@ class TestAvroConversion:
     def test_avro_write_empty(self, tmp_path):
         """Writing empty dataset to Avro should return 0 without error."""
         from datamorph.converters import AvroWriter
+
         writer = AvroWriter()
         path = tmp_path / "empty.avro"
         count = writer.write_stream(iter([]), path)
@@ -308,7 +315,9 @@ class TestAvroConversion:
     def test_avro_nullable_first_row(self, tmp_path):
         """Avro should handle nullable fields even when the first row has nulls."""
         path = tmp_path / "data.csv"
-        path.write_text("name,age,email\nAlice,,alice@test.com\nBob,30,\nCharlie,25,charlie@test.com\n")
+        path.write_text(
+            "name,age,email\nAlice,,alice@test.com\nBob,30,\nCharlie,25,charlie@test.com\n"
+        )
         avro_file = tmp_path / "out.avro"
         result = convert(path, avro_file)
         assert not result.errors
@@ -368,6 +377,7 @@ class TestErrors:
 
     def test_unsupported_format(self):
         from datamorph.converters import get_reader
+
         with pytest.raises(ValueError, match="Unsupported format"):
             get_reader("exe")
 
@@ -439,11 +449,18 @@ class TestCLI:
 
     def test_convert_with_format_override(self, runner, sample_csv, tmp_path):
         output = tmp_path / "out.txt"
-        result = runner.invoke(cli, [
-            "convert", str(sample_csv), str(output),
-            "--input-format", "csv",
-            "--output-format", "json",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "convert",
+                str(sample_csv),
+                str(output),
+                "--input-format",
+                "csv",
+                "--output-format",
+                "json",
+            ],
+        )
         assert result.exit_code == 0
         assert "Converted" in result.output
 
@@ -453,7 +470,9 @@ class TestCLI:
         assert result.exit_code == 0
 
     def test_convert_nonexistent_input(self, runner, tmp_path):
-        result = runner.invoke(cli, ["convert", "/nonexistent/file.csv", str(tmp_path / "out.json")])
+        result = runner.invoke(
+            cli, ["convert", "/nonexistent/file.csv", str(tmp_path / "out.json")]
+        )
         assert result.exit_code != 0
 
     def test_formats_command(self, runner):
@@ -476,20 +495,37 @@ class TestCLI:
         assert len(data) >= 1
 
     def test_batch_no_input(self, runner, tmp_path):
-        result = runner.invoke(cli, [
-            "batch", str(tmp_path), str(tmp_path / "out"),
-            "--from", "csv", "--to", "json",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "batch",
+                str(tmp_path),
+                str(tmp_path / "out"),
+                "--from",
+                "csv",
+                "--to",
+                "json",
+            ],
+        )
         assert result.exit_code == 0
 
     def test_batch_with_files(self, runner, sample_csv, tmp_path):
         """Batch convert CSV files in a directory to JSON via CLI."""
         output_dir = tmp_path / "json_out"
-        result = runner.invoke(cli, [
-            "batch", str(sample_csv.parent), str(output_dir),
-            "--from", "csv", "--to", "json",
-            "--pattern", "*.csv",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "batch",
+                str(sample_csv.parent),
+                str(output_dir),
+                "--from",
+                "csv",
+                "--to",
+                "json",
+                "--pattern",
+                "*.csv",
+            ],
+        )
         assert result.exit_code == 0
         assert "converted" in result.output.lower() or "Complete" in result.output
         out_files = list(output_dir.glob("*.json"))
@@ -503,11 +539,19 @@ class TestCLI:
         csv_file.write_text("name,age\nAlice,30\nBob,25\n")
 
         output_dir = tmp_path / "json_out"
-        result = runner.invoke(cli, [
-            "batch", str(tmp_path), str(output_dir),
-            "--from", "csv", "--to", "json",
-            "--recursive",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "batch",
+                str(tmp_path),
+                str(output_dir),
+                "--from",
+                "csv",
+                "--to",
+                "json",
+                "--recursive",
+            ],
+        )
         assert result.exit_code == 0
         assert "converted" in result.output.lower() or "Complete" in result.output
         out_files = list(output_dir.rglob("*.json"))
@@ -518,10 +562,18 @@ class TestCLI:
     def test_batch_to_parquet(self, runner, sample_csv, tmp_path):
         """Batch convert CSV files to Parquet via CLI."""
         output_dir = tmp_path / "pq_out"
-        result = runner.invoke(cli, [
-            "batch", str(sample_csv.parent), str(output_dir),
-            "--from", "csv", "--to", "parquet",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "batch",
+                str(sample_csv.parent),
+                str(output_dir),
+                "--from",
+                "csv",
+                "--to",
+                "parquet",
+            ],
+        )
         assert result.exit_code == 0
         out_files = list(output_dir.glob("*.parquet"))
         assert len(out_files) >= 1
@@ -529,10 +581,18 @@ class TestCLI:
     def test_batch_to_jsonl(self, runner, sample_csv, tmp_path):
         """Batch convert CSV files to JSONL via CLI."""
         output_dir = tmp_path / "jsonl_out"
-        result = runner.invoke(cli, [
-            "batch", str(sample_csv.parent), str(output_dir),
-            "--from", "csv", "--to", "jsonl",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "batch",
+                str(sample_csv.parent),
+                str(output_dir),
+                "--from",
+                "csv",
+                "--to",
+                "jsonl",
+            ],
+        )
         assert result.exit_code == 0
         out_files = list(output_dir.glob("*.jsonl"))
         assert len(out_files) >= 1
@@ -546,11 +606,20 @@ class TestCLI:
         csv_file = subdir / "data.csv"
         csv_file.write_text("name|age\nAlice|30\nBob|25\n")
         output_dir = tmp_path / "json_out"
-        result = runner.invoke(cli, [
-            "batch", str(subdir), str(output_dir),
-            "--from", "csv", "--to", "json",
-            "--csv-delimiter", "|",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "batch",
+                str(subdir),
+                str(output_dir),
+                "--from",
+                "csv",
+                "--to",
+                "json",
+                "--csv-delimiter",
+                "|",
+            ],
+        )
         assert result.exit_code == 0
         out_files = list(output_dir.glob("*.json"))
         assert len(out_files) >= 1
@@ -565,11 +634,20 @@ class TestCLI:
         csv_file = subdir / "data.csv"
         csv_file.write_text("name,age\nAlice,30\n")
         output_dir = tmp_path / "out"
-        result = runner.invoke(cli, [
-            "batch", str(subdir), str(output_dir),
-            "--from", "csv", "--to", "json",
-            "--pattern", "*.tsv",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "batch",
+                str(subdir),
+                str(output_dir),
+                "--from",
+                "csv",
+                "--to",
+                "json",
+                "--pattern",
+                "*.tsv",
+            ],
+        )
         assert result.exit_code == 0  # graceful no-op
         out_files = list(output_dir.glob("*"))
         assert len(out_files) == 0
@@ -633,8 +711,10 @@ class TestJsonlConversion:
     def test_jsonl_to_json(self, tmp_path):
         path = tmp_path / "data.jsonl"
         path.write_text(
-            json.dumps({"name": "Alice", "age": 30}) + "\n"
-            + json.dumps({"name": "Bob", "age": 25}) + "\n"
+            json.dumps({"name": "Alice", "age": 30})
+            + "\n"
+            + json.dumps({"name": "Bob", "age": 25})
+            + "\n"
         )
         output = tmp_path / "out.json"
         result = convert(path, output)
@@ -647,8 +727,10 @@ class TestJsonlConversion:
     def test_jsonl_to_csv(self, tmp_path):
         path = tmp_path / "data.jsonl"
         path.write_text(
-            json.dumps({"name": "Alice", "age": 30}) + "\n"
-            + json.dumps({"name": "Bob", "age": 25}) + "\n"
+            json.dumps({"name": "Alice", "age": 30})
+            + "\n"
+            + json.dumps({"name": "Bob", "age": 25})
+            + "\n"
         )
         output = tmp_path / "out.csv"
         result = convert(path, output)
@@ -731,8 +813,11 @@ class TestBatchConversion:
         input_dir = sample_csv.parent
         output_dir = tmp_path / "batch_out"
         results = convert_batch(
-            str(input_dir), str(output_dir),
-            "csv", "json", pattern="test.csv",
+            str(input_dir),
+            str(output_dir),
+            "csv",
+            "json",
+            pattern="test.csv",
         )
         assert len(results) >= 1
         assert not results[0].errors
@@ -744,8 +829,11 @@ class TestBatchConversion:
         input_dir.mkdir()
         output_dir = tmp_path / "batch_out"
         results = convert_batch(
-            str(input_dir), str(output_dir),
-            "csv", "json", pattern="*.csv",
+            str(input_dir),
+            str(output_dir),
+            "csv",
+            "json",
+            pattern="*.csv",
         )
         assert results == []
 
@@ -825,20 +913,25 @@ class TestAvroTypeMapping:
 
     def test_avro_type_bool(self):
         from datamorph.converters import _avro_type
+
         assert _avro_type(True) == "boolean"
 
     def test_avro_type_int(self):
         from datamorph.converters import _avro_type
+
         assert _avro_type(42) == "long"
 
     def test_avro_type_float(self):
         from datamorph.converters import _avro_type
+
         assert _avro_type(3.14) == "double"
 
     def test_avro_type_none(self):
         from datamorph.converters import _avro_type
+
         assert _avro_type(None) == "null"
 
     def test_avro_type_string(self):
         from datamorph.converters import _avro_type
+
         assert _avro_type("hello") == "string"
