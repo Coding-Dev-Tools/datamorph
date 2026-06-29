@@ -1,4 +1,5 @@
 """DataMorph package — batch format converter with streaming."""
+
 __version__ = "0.1.1"
 from .converters import (
     ConversionResult,
