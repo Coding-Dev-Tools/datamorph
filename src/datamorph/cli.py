@@ -41,8 +41,18 @@ def cli() -> None:
 @cli.command()
 @click.argument("input", type=click.Path(exists=True))
 @click.argument("output", type=click.Path())
-@click.option("--input-format", "-if", default=None, help="Input format (auto-detected from extension if omitted)")
-@click.option("--output-format", "-of", default=None, help="Output format (auto-detected from extension if omitted)")
+@click.option(
+    "--input-format",
+    "-if",
+    default=None,
+    help="Input format (auto-detected from extension if omitted)",
+)
+@click.option(
+    "--output-format",
+    "-of",
+    default=None,
+    help="Output format (auto-detected from extension if omitted)",
+)
 @click.option("--pretty", "-p", is_flag=True, help="Pretty-print JSON output")
 @click.option("--csv-delimiter", default=",", help="CSV delimiter (default: comma)")
 def convert_cmd(
@@ -90,7 +100,9 @@ def convert_cmd(
 @click.option("--from", "-f", "from_format", required=True, help="Source format")
 @click.option("--to", "-t", "to_format", required=True, help="Target format")
 @click.option("--pattern", default="*", help="File glob pattern (default: all files)")
-@click.option("--recursive", "-r", is_flag=True, help="Search subdirectories recursively")
+@click.option(
+    "--recursive", "-r", is_flag=True, help="Search subdirectories recursively"
+)
 @click.option("--csv-delimiter", default=",", help="CSV delimiter")
 def batch_cmd(
     input_dir: str,
@@ -139,9 +151,16 @@ def batch_cmd(
 
 @cli.command()
 @click.argument("file", type=click.Path(exists=True))
-@click.option("--format", "-f", "fmt", default=None, help="File format (auto-detected if omitted)")
+@click.option(
+    "--format", "-f", "fmt", default=None, help="File format (auto-detected if omitted)"
+)
 @click.option("--json-output", "-j", is_flag=True, help="Output schema as JSON")
-@click.option("--sample", default=100, type=int, help="Number of rows to sample for schema inference")
+@click.option(
+    "--sample",
+    default=100,
+    type=int,
+    help="Number of rows to sample for schema inference",
+)
 def schema_cmd(
     file: str,
     fmt: str | None,
@@ -205,14 +224,28 @@ def formats_cmd() -> None:
 
 @cli.command()
 @click.argument("file", type=click.Path(exists=True))
-@click.option("--format", "-f", "fmt", default=None, help="File format (auto-detected if omitted)")
 @click.option(
-    "--schema", "-s", "schema_file", default=None,
-    type=click.Path(exists=True), help="JSON schema file to validate against",
+    "--format", "-f", "fmt", default=None, help="File format (auto-detected if omitted)"
 )
-@click.option("--strict", is_flag=True, help="Strict mode: fail on type mismatches and missing fields")
-@click.option("--max-rows", default=0, type=int, help="Maximum rows to validate (0 = all)")
-@click.option("--json-output", "-j", is_flag=True, help="Output validation result as JSON")
+@click.option(
+    "--schema",
+    "-s",
+    "schema_file",
+    default=None,
+    type=click.Path(exists=True),
+    help="JSON schema file to validate against",
+)
+@click.option(
+    "--strict",
+    is_flag=True,
+    help="Strict mode: fail on type mismatches and missing fields",
+)
+@click.option(
+    "--max-rows", default=0, type=int, help="Maximum rows to validate (0 = all)"
+)
+@click.option(
+    "--json-output", "-j", is_flag=True, help="Output validation result as JSON"
+)
 def validate_cmd(
     file: str,
     fmt: str | None,
@@ -253,7 +286,9 @@ def validate_cmd(
         console.print(json.dumps(output, indent=2))
     else:
         if result.valid:
-            console.print(f"[green]✓ VALID[/green] — {result.rows_checked} rows checked")
+            console.print(
+                f"[green]✓ VALID[/green] — {result.rows_checked} rows checked"
+            )
         else:
             console.print(f"[red]✗ INVALID[/red] — {result.rows_checked} rows checked")
 
