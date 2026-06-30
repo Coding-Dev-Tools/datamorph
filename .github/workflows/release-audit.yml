@@ -1,0 +1,64 @@
+name: release-audit
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1 (pinned)
+        with:
+          path: target
+
+      - name: Check out the shared release-audit harness
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1 (pinned)
+        with:
+          repository: Coding-Dev-Tools/release-audit
+          path: harness
+          # Pin to a tag once a stable release is published; main is fine
+          # for now since the harness is small and self-contained.
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c  # v5.0.0 (pinned)
+        with:
+          python-version: "3.11"
+
+      - name: Run the 8-angle release audit
+        working-directory: harness
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+        run: |
+          python audit.py "$GITHUB_WORKSPACE/target" --out-dir scorecard
+          python3 - <<'PY'
+          import json, os, pathlib
+          repo = pathlib.Path(os.environ["GITHUB_WORKSPACE"], "target").name
+          data = json.loads(pathlib.Path("scorecard", f"{repo}.json").read_text())
+          print("## Release Audit (8 angles)")
+          print()
+          print(f"**Overall grade: {data['overall_grade']}** ({data['angles_passing']}/{data['angles_total']} angles passing)")
+          print()
+          print("| Angle | Grade |")
+          print("|-------|-------|")
+          for a in data["angles"]:
+              print(f"| {a['angle']} | {a['grade']} |")
+          PY
+
+      - name: Fail on blockers
+        working-directory: harness
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, sys
+          repo = pathlib.Path(os.environ["GITHUB_WORKSPACE"], "target").name
+          data = json.loads(pathlib.Path("scorecard", f"{repo}.json").read_text())
+          if data["blockers"] > 0:
+              print(f"::error::{data['blockers']} release-blocker angle(s) — see audit output above")
+              sys.exit(1)
+          PY

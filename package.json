@@ -1,45 +1,54 @@
 {
-  "name": "datamorph-cli",
-  "version": "0.1.1",
-  "description": "Batch data format converter — stream files between CSV, JSON, Parquet, YAML, Avro, and more. Includes schema inference and validation.",
-  "author": "Revenue Holdings <engineering@revenueholdings.dev>",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Coding-Dev-Tools/datamorph.git"
-  },
-  "homepage": "https://github.com/Coding-Dev-Tools/datamorph#readme",
-  "bugs": {
-    "url": "https://github.com/Coding-Dev-Tools/datamorph/issues"
-  },
-  "bin": {
-    "datamorph": "cli.js"
-  },
-  "keywords": [
-    "data-converter",
-    "csv",
-    "json",
-    "parquet",
-    "yaml",
-    "avro",
-    "protobuf",
-    "schema-validation",
-    "etl",
-    "data-pipeline",
-    "streaming",
-    "cli",
-    "big-data",
-    "data-engineering",
-    "developer-tools"
-  ],
-  "files": [
-    "cli.js"
-  ],
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "preferGlobal": true,
-  "publishConfig": {
-    "access": "public"
-  }
+    "name":  "datamorph-cli",
+    "version":  "0.1.1",
+    "description":  "Batch data format converter � stream files between CSV, JSON, Parquet, YAML, Avro, and more. Includes schema inference and validation.",
+    "author":  "Revenue Holdings \u003cengineering@revenueholdings.dev\u003e",
+    "license":  "MIT",
+    "repository":  {
+                       "type":  "git",
+                       "url":  "https://github.com/Coding-Dev-Tools/datamorph.git"
+                   },
+    "homepage":  "https://github.com/Coding-Dev-Tools/datamorph#readme",
+    "bugs":  {
+                 "url":  "https://github.com/Coding-Dev-Tools/datamorph/issues"
+             },
+    "bin":  {
+                "datamorph":  "cli.js"
+            },
+    "keywords":  [
+                     "data-converter",
+                     "csv",
+                     "json",
+                     "parquet",
+                     "yaml",
+                     "avro",
+                     "protobuf",
+                     "schema-validation",
+                     "etl",
+                     "data-pipeline",
+                     "streaming",
+                     "cli",
+                     "big-data",
+                     "data-engineering",
+                     "developer-tools"
+                 ],
+    "files":  [
+                  "cli.js"
+              ],
+    "engines":  {
+                    "node":  "\u003e=16.0.0"
+                },
+    "preferGlobal":  true,
+    "publishConfig":  {
+                          "access":  "public"
+                      },
+    "scripts":  {
+                    "test":  "node --test tests/*.test.js",
+                    "lint":  "eslint .",
+                    "test:py":  "pytest"
+                },
+    "devDependencies":  {
+                            "@eslint/js":  "^9.0.0",
+                            "eslint":  "^9.0.0"
+                        }
 }

@@ -10,3 +10,6 @@ htmlcov/
 dist/
 build/
 *.egg
+
+# Added by release-prep
+node_modules
