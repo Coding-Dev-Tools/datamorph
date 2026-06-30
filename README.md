@@ -165,20 +165,4 @@ Get a license key at [revenueholdings.dev/pricing](https://coding-dev-tools.gith
 
 ## License
 
-<<<<<<< Updated upstream
 MIT — [Revenue Holdings](https://coding-dev-tools.github.io/devforge/)
-=======
-MIT — [Revenue Holdings](https://coding-dev-tools.github.io/revenueholdings.dev/)
-
-## Install
-
-```bash
-npm install
-```
-
-## Test
-
-```bash
-npm test  # runs: node --test tests/
-```
->>>>>>> Stashed changes
