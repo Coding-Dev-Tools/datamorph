@@ -29,6 +29,7 @@ dependencies = [
     "pandas>=2.0.0",
     "pyarrow>=14.0.0",
     "fastavro>=1.12.2",
+    "protobuf>=7.34.1",
 ]
 
 [project.urls]
@@ -40,12 +41,9 @@ Changelog = "https://github.com/Coding-Dev-Tools/datamorph/releases"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=9.0.3",
+    "pytest>=9.1.0",
     "pytest-cov>=7.1.0",
-    "ruff>=0.4.0",
-]
-full = [
-    "protobuf>=7.34.1",
+    "ruff>=0.15.20",
 ]
 
 [project.scripts]
