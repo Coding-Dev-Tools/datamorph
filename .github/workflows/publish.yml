@@ -23,12 +23,12 @@ jobs:
     environment: pypi
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           persist-credentials: false
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.12"
 
@@ -48,10 +48,10 @@ jobs:
 
       - name: Publish to TestPyPI
         if: ${{ inputs.pypi_target == 'testpypi' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@ecb4c3dfd4790f14e30aaeac04855c7413ee9368
         with:
           repository-url: https://test.pypi.org/legacy/
 
       - name: Publish to PyPI
         if: ${{ inputs.pypi_target == 'pypi' || github.event_name == 'release' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@ecb4c3dfd4790f14e30aaeac04855c7413ee9368
