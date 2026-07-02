@@ -498,7 +498,9 @@ def convert(
     # Convert
     try:
         row_stream = reader.read_stream(input_path)
-        result.rows_written = writer.write_stream(row_stream, output_path)
+        rows = list(row_stream)
+        result.rows_read = len(rows)
+        result.rows_written = writer.write_stream(iter(rows), output_path)
     except Exception as e:
         result.errors.append(f"Conversion failed: {e}")
 
