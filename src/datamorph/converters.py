@@ -521,12 +521,34 @@ def convert(
         except StopIteration:
             pass
 
-    # Convert
+    # Convert. Wrap the source stream in a counter so ``rows_read`` reflects the
+    # number of rows actually pulled from the reader -- accurate even when the
+    # writer raises partway through (the count is committed in ``finally``).
+    read_count = 0
+
+    def _counting(stream: RowStream) -> RowStream:
+        nonlocal read_count
+        for row in stream:
+            read_count += 1
+            yield row
+
     try:
         row_stream = reader.read_stream(input_path)
-        result.rows_written = writer.write_stream(row_stream, output_path)
+        result.rows_written = writer.write_stream(_counting(row_stream), output_path)
     except Exception as e:
         result.errors.append(f"Conversion failed: {e}")
+    finally:
+        result.rows_read = read_count
+
+    # Silent-failure guard: rows were read but none written, yet the writer did
+    # not raise. That is a conversion reporting green while producing nothing --
+    # surface it as an error instead of a misleading success. Zero-in/zero-out
+    # is legitimate and deliberately excluded.
+    if not result.errors and result.rows_read > 0 and result.rows_written == 0:
+        result.errors.append(
+            f"silent failure: read {result.rows_read} row(s) from {input_format} "
+            f"but wrote 0 to {output_format}"
+        )
 
     return result
 
