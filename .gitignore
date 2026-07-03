@@ -13,3 +13,6 @@ build/
 
 # Added by release-prep
 node_modules
+
+# Build artifacts
+_site/
