@@ -935,3 +935,61 @@ class TestAvroTypeMapping:
         from datamorph.converters import _avro_type
 
         assert _avro_type("hello") == "string"
+
+
+class TestScalarJsonRootAndRowsRead:
+    """Coverage for scalar/bare JSON roots and the previously-unpopulated rows_read."""
+
+    def test_rows_read_dict_root(self, tmp_path):
+        inp = tmp_path / "in.json"
+        out = tmp_path / "out.json"
+        inp.write_text(json.dumps({"a": 1, "b": 2}), encoding="utf-8")
+        result = convert(inp, out, input_format="json", output_format="json")
+        assert result.rows_read == 1
+        assert result.rows_written == 1
+        assert json.loads(out.read_text(encoding="utf-8")) == [{"a": 1, "b": 2}]
+
+    def test_rows_read_list_root(self, tmp_path):
+        inp = tmp_path / "in.json"
+        out = tmp_path / "out.json"
+        inp.write_text(json.dumps([{"a": 1}, {"a": 2}]), encoding="utf-8")
+        result = convert(inp, out, input_format="json", output_format="json")
+        assert result.rows_read == 2
+        assert result.rows_written == 2
+        assert json.loads(out.read_text(encoding="utf-8")) == [{"a": 1}, {"a": 2}]
+
+    def test_scalar_string_root_round_trip(self, tmp_path):
+        inp = tmp_path / "in.json"
+        out = tmp_path / "out.json"
+        inp.write_text('"hello world"', encoding="utf-8")
+        result = convert(inp, out, input_format="json", output_format="json")
+        assert result.rows_read == 1
+        assert result.rows_written == 1
+        assert json.loads(out.read_text(encoding="utf-8")) == [{"data": "hello world"}]
+
+    def test_scalar_number_root_round_trip(self, tmp_path):
+        inp = tmp_path / "in.json"
+        out = tmp_path / "out.json"
+        inp.write_text("42", encoding="utf-8")
+        result = convert(inp, out, input_format="json", output_format="json")
+        assert result.rows_read == 1
+        assert result.rows_written == 1
+        assert json.loads(out.read_text(encoding="utf-8")) == [{"data": 42}]
+
+    def test_scalar_null_root_round_trip(self, tmp_path):
+        inp = tmp_path / "in.json"
+        out = tmp_path / "out.json"
+        inp.write_text("null", encoding="utf-8")
+        result = convert(inp, out, input_format="json", output_format="json")
+        assert result.rows_read == 1
+        assert result.rows_written == 1
+        assert json.loads(out.read_text(encoding="utf-8")) == [{"data": None}]
+
+    def test_scalar_bool_root_round_trip(self, tmp_path):
+        inp = tmp_path / "in.json"
+        out = tmp_path / "out.json"
+        inp.write_text("true", encoding="utf-8")
+        result = convert(inp, out, input_format="json", output_format="json")
+        assert result.rows_read == 1
+        assert result.rows_written == 1
+        assert json.loads(out.read_text(encoding="utf-8")) == [{"data": True}]
