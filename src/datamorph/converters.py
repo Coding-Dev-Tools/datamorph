@@ -195,7 +195,14 @@ class CsvReader(FormatReader):
         with open(path, "r", newline="", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f, delimiter=self.delimiter)
             for row in reader:
-                yield {k.strip(): v.strip() if v else None for k, v in row.items()}
+                # csv.DictReader stores overflow fields (rows with more
+                # columns than the header) under the key None — skip them
+                # instead of crashing on None.strip().
+                yield {
+                    k.strip(): v.strip() if v else None
+                    for k, v in row.items()
+                    if k is not None
+                }
 
 
 class CsvWriter(FormatWriter):
@@ -660,7 +667,12 @@ def validate(
 
     # Infer schema from file if none provided
     if expected_schema is None:
-        expected_schema = reader.infer_schema(input_path)
+        try:
+            expected_schema = reader.infer_schema(input_path)
+        except Exception as e:
+            result.valid = False
+            result.errors.append(f"Validation failed: could not read file: {e}")
+            return result
         if not expected_schema:
             result.warnings.append(
                 "File appears to be empty or has no detectable schema"
@@ -669,49 +681,57 @@ def validate(
 
     expected_fields = {f["name"]: f["type"] for f in expected_schema}
 
-    # Stream through rows and check
+    # Stream through rows and check. Guard the read loop so malformed input
+    # (invalid JSON/YAML, ragged CSV, ...) yields a ValidationResult with
+    # valid=False instead of an unhandled traceback.
     rows_checked = 0
-    for row in reader.read_stream(input_path):
-        rows_checked += 1
+    try:
+        for row in reader.read_stream(input_path):
+            rows_checked += 1
 
-        # Check for missing fields
-        for field_name in expected_fields:
-            if field_name not in row and strict:
-                result.errors.append(
-                    f"Row {rows_checked}: missing required field '{field_name}'"
-                )
-                result.valid = False
-
-        # Check for unexpected fields (strict mode)
-        if strict:
-            for field_name in row:
-                if field_name not in expected_fields:
-                    result.warnings.append(
-                        f"Row {rows_checked}: unexpected field '{field_name}'"
+            # Check for missing fields
+            for field_name in expected_fields:
+                if field_name not in row and strict:
+                    result.errors.append(
+                        f"Row {rows_checked}: missing required field '{field_name}'"
                     )
+                    result.valid = False
 
-        # Check types on non-None values
-        for field_name, expected_type in expected_fields.items():
-            val = row.get(field_name)
-            if val is None:
-                continue  # nulls are acceptable unless we add nullability checks
-            actual_type = _infer_type(val)
-            if actual_type != expected_type and actual_type != "null":
-                # Check for compatible widening
-                widened = _widen_type(expected_type, actual_type)
-                if widened != expected_type:
-                    msg = (
-                        f"Row {rows_checked}: field '{field_name}' expected "
-                        f"{expected_type} but got {actual_type}"
-                    )
-                    if strict:
-                        result.errors.append(msg)
-                        result.valid = False
-                    else:
-                        result.warnings.append(msg)
+            # Check for unexpected fields (strict mode)
+            if strict:
+                for field_name in row:
+                    if field_name not in expected_fields:
+                        result.warnings.append(
+                            f"Row {rows_checked}: unexpected field '{field_name}'"
+                        )
 
-        if max_rows > 0 and rows_checked >= max_rows:
-            break
+            # Check types on non-None values
+            for field_name, expected_type in expected_fields.items():
+                val = row.get(field_name)
+                if val is None:
+                    continue  # nulls are acceptable unless we add nullability checks
+                actual_type = _infer_type(val)
+                if actual_type != expected_type and actual_type != "null":
+                    # Check for compatible widening
+                    widened = _widen_type(expected_type, actual_type)
+                    if widened != expected_type:
+                        msg = (
+                            f"Row {rows_checked}: field '{field_name}' expected "
+                            f"{expected_type} but got {actual_type}"
+                        )
+                        if strict:
+                            result.errors.append(msg)
+                            result.valid = False
+                        else:
+                            result.warnings.append(msg)
+
+            if max_rows > 0 and rows_checked >= max_rows:
+                break
+    except Exception as e:
+        result.valid = False
+        result.errors.append(
+            f"Validation failed while reading row {rows_checked + 1}: {e}"
+        )
 
     result.rows_checked = rows_checked
     if rows_checked == 0 and expected_schema:
