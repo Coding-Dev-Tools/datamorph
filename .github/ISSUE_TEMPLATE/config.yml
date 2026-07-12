@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://revenueholdings.dev
+    about: Check the documentation first
+  - name: Security Concern
+    url: https://github.com/Coding-Dev-Tools/security
+    about: Please report security vulnerabilities privately
