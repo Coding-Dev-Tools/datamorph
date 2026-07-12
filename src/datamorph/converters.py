@@ -284,7 +284,12 @@ class JsonlWriter(FormatWriter):
 
 class YamlReader(FormatReader):
     def read_stream(self, path: str | Path) -> RowStream:
-        import yaml
+        try:
+            import yaml
+        except ImportError as e:
+            raise ImportError(
+                "YAML support requires PyYAML: pip install pyyaml"
+            ) from e
 
         with open(path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
@@ -298,7 +303,12 @@ class YamlReader(FormatReader):
 
 class YamlWriter(FormatWriter):
     def write_stream(self, rows: RowStream, path: str | Path) -> int:
-        import yaml
+        try:
+            import yaml
+        except ImportError as e:
+            raise ImportError(
+                "YAML support requires PyYAML: pip install pyyaml"
+            ) from e
 
         rows_list = list(rows)
         with open(path, "w", encoding="utf-8") as f:
@@ -317,7 +327,13 @@ class YamlWriter(FormatWriter):
 
 class ParquetReader(FormatReader):
     def read_stream(self, path: str | Path) -> RowStream:
-        import pyarrow.parquet as pq
+        try:
+            import pyarrow.parquet as pq
+        except ImportError as e:
+            raise ImportError(
+                "Parquet support requires the 'parquet' extra: "
+                "pip install 'datamorph[parquet]'"
+            ) from e
 
         pf = pq.ParquetFile(path)
         for batch in pf.iter_batches():
@@ -330,9 +346,15 @@ class ParquetReader(FormatReader):
 
 class ParquetWriter(FormatWriter):
     def write_stream(self, rows: RowStream, path: str | Path) -> int:
-        import pandas as pd
-        import pyarrow as pa
-        import pyarrow.parquet as pq
+        try:
+            import pandas as pd
+            import pyarrow as pa
+            import pyarrow.parquet as pq
+        except ImportError as e:
+            raise ImportError(
+                "Parquet support requires the 'parquet' extra: "
+                "pip install 'datamorph[parquet]'"
+            ) from e
 
         rows_list = list(rows)
         if not rows_list:
@@ -351,7 +373,13 @@ class ParquetWriter(FormatWriter):
 
 class AvroReader(FormatReader):
     def read_stream(self, path: str | Path) -> RowStream:
-        import fastavro
+        try:
+            import fastavro
+        except ImportError as e:
+            raise ImportError(
+                "Avro support requires the 'avro' extra: "
+                "pip install 'datamorph[avro]'"
+            ) from e
 
         with open(path, "rb") as f:
             reader = fastavro.reader(f)
@@ -361,7 +389,13 @@ class AvroReader(FormatReader):
 
 class AvroWriter(FormatWriter):
     def write_stream(self, rows: RowStream, path: str | Path) -> int:
-        import fastavro
+        try:
+            import fastavro
+        except ImportError as e:
+            raise ImportError(
+                "Avro support requires the 'avro' extra: "
+                "pip install 'datamorph[avro]'"
+            ) from e
 
         rows_list = list(rows)
         if not rows_list:
