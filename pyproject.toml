@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "datamorph-cli"
+version = "0.1.1"
+description = "CLI tool for batch converting between data formats (CSV, JSON, YAML, Parquet, Avro, Protobuf) with streaming for large files"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{name = "Coding-Dev-Tools"}]
+keywords = ["data-converter", "csv", "json", "yaml", "parquet", "avro", "etl", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "click>=8.4.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0.3",
+    "pandas>=2.0.0",
+    "pyarrow>=14.0.0",
+    "fastavro>=1.12.2",
+    "protobuf>=7.34.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/Coding-Dev-Tools/datamorph"
+Documentation = "https://coding-dev-tools.github.io/datamorph/"
+Repository = "https://github.com/Coding-Dev-Tools/datamorph"
+Issues = "https://github.com/Coding-Dev-Tools/datamorph/issues"
+Changelog = "https://github.com/Coding-Dev-Tools/datamorph/releases"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.1.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.20",
+]
+
+[project.scripts]
+datamorph = "datamorph.cli:cli"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+datamorph = ["py.typed"]
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["datamorph"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

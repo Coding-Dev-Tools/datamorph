@@ -1,0 +1,4 @@
+# GitHub Pages Jekyll config
+title: DataMorph
+description: Batch data format converter — stream files between CSV, JSON, Parquet, YAML, Avro, and more
+theme: jekyll-theme-cayman
