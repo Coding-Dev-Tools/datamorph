@@ -4,7 +4,7 @@
 Batch data format converter — stream files between CSV, JSON, Parquet, YAML, Avro, and more. Includes schema inference and validation.
 
 ## Build & Test Commands
-- Install: `pip install -e .` or `pip install datamorph-cli`
+- Install: `pip install -e .` or `pip install git+https://github.com/Coding-Dev-Tools/datamorph.git`
 - Test: `pytest tests/` (or `python -m pytest tests/ -v --tb=short`)
 - Lint: `ruff check .`
 - Build: `pip install build twine && python -m build && twine check dist/*`
