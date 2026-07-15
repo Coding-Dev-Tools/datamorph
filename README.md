@@ -11,8 +11,8 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/Coding-Dev-Tools/datamorph/blob/main/LICENSE)
 [![Open Source Alternative](https://img.shields.io/badge/Open_Source_Alternative-%E2%87%92-blue?logo=opensourceinitiative)](https://www.opensourcealternative.to/project/datamorph)
 |[![LibHunt](https://img.shields.io/badge/LibHunt-%E2%87%92-blue?logo=codeigniter)](https://www.libhunt.com/r/Coding-Dev-Tools/datamorph)
-|[![PyPI](https://img.shields.io/pypi/v/datamorph-cli)](https://pypi.org/project/datamorph-cli/)
-
+|[![PyPI](https://img.shields.io/badge/PyPI-not%20published-orange)](https://github.com/Coding-Dev-Tools/datamorph#installation)
+|
 > ⭐ **Star this repo** if you work with data formats
 
 Part of the [Revenue Holdings](https://coding-dev-tools.github.io/devforge/) developer tool ecosystem.
