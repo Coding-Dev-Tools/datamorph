@@ -16,3 +16,6 @@ node_modules
 
 # Build artifacts
 _site/
+
+# npm lock artifact (Python-only project)
+package-lock.json
