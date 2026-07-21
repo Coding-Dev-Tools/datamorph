@@ -18,6 +18,18 @@ from datamorph.converters import (
     supported_formats,
 )
 
+try:
+    import pyarrow.parquet  # noqa: F401
+
+    _HAS_PYARROW = True
+except (ImportError, Exception):
+    _HAS_PYARROW = False
+
+requires_pyarrow = pytest.mark.skipif(
+    not _HAS_PYARROW,
+    reason="Parquet support requires pyarrow: pip install 'datamorph[parquet]'",
+)
+
 # ── Fixtures ──────────────────────────────────────────────────────────
 
 
@@ -235,6 +247,7 @@ class TestYamlConversion:
 # ── Parquet ───────────────────────────────────────────────────────────
 
 
+@requires_pyarrow
 class TestParquetConversion:
     def test_csv_to_parquet(self, sample_csv, tmp_path):
         output = tmp_path / "output.parquet"
@@ -315,9 +328,7 @@ class TestAvroConversion:
     def test_avro_nullable_first_row(self, tmp_path):
         """Avro should handle nullable fields even when the first row has nulls."""
         path = tmp_path / "data.csv"
-        path.write_text(
-            "name,age,email\nAlice,,alice@test.com\nBob,30,\nCharlie,25,charlie@test.com\n"
-        )
+        path.write_text("name,age,email\nAlice,,alice@test.com\nBob,30,\nCharlie,25,charlie@test.com\n")
         avro_file = tmp_path / "out.avro"
         result = convert(path, avro_file)
         assert not result.errors
@@ -464,15 +475,14 @@ class TestCLI:
         assert result.exit_code == 0
         assert "Converted" in result.output
 
+    @requires_pyarrow
     def test_convert_to_parquet(self, runner, sample_csv, tmp_path):
         output = tmp_path / "out.parquet"
         result = runner.invoke(cli, ["convert", str(sample_csv), str(output)])
         assert result.exit_code == 0
 
     def test_convert_nonexistent_input(self, runner, tmp_path):
-        result = runner.invoke(
-            cli, ["convert", "/nonexistent/file.csv", str(tmp_path / "out.json")]
-        )
+        result = runner.invoke(cli, ["convert", "/nonexistent/file.csv", str(tmp_path / "out.json")])
         assert result.exit_code != 0
 
     def test_formats_command(self, runner):
@@ -559,6 +569,7 @@ class TestCLI:
         # Verify nested directory structure is preserved
         assert any("nested" in str(f) for f in out_files)
 
+    @requires_pyarrow
     def test_batch_to_parquet(self, runner, sample_csv, tmp_path):
         """Batch convert CSV files to Parquet via CLI."""
         output_dir = tmp_path / "pq_out"
@@ -710,12 +721,7 @@ class TestRoundtrips:
 class TestJsonlConversion:
     def test_jsonl_to_json(self, tmp_path):
         path = tmp_path / "data.jsonl"
-        path.write_text(
-            json.dumps({"name": "Alice", "age": 30})
-            + "\n"
-            + json.dumps({"name": "Bob", "age": 25})
-            + "\n"
-        )
+        path.write_text(json.dumps({"name": "Alice", "age": 30}) + "\n" + json.dumps({"name": "Bob", "age": 25}) + "\n")
         output = tmp_path / "out.json"
         result = convert(path, output)
         assert not result.errors
@@ -726,12 +732,7 @@ class TestJsonlConversion:
 
     def test_jsonl_to_csv(self, tmp_path):
         path = tmp_path / "data.jsonl"
-        path.write_text(
-            json.dumps({"name": "Alice", "age": 30})
-            + "\n"
-            + json.dumps({"name": "Bob", "age": 25})
-            + "\n"
-        )
+        path.write_text(json.dumps({"name": "Alice", "age": 30}) + "\n" + json.dumps({"name": "Bob", "age": 25}) + "\n")
         output = tmp_path / "out.csv"
         result = convert(path, output)
         assert not result.errors
@@ -768,6 +769,7 @@ class TestJsonlConversion:
 class TestWriterKwargLeak:
     """Regression tests for delimiter kwarg leaking to non-CSV writers."""
 
+    @requires_pyarrow
     def test_csv_delimiter_to_parquet(self, tmp_path):
         """csv_delimiter should not crash when converting to Parquet."""
         csv_path = tmp_path / "data.csv"
