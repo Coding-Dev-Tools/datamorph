@@ -48,7 +48,10 @@ dev = [
 parquet = ["pandas>=2.0.0", "pyarrow>=14.0.0"]
 avro = ["fastavro>=1.12.2"]
 protobuf = ["protobuf>=7.34.1"]
-all = ["datamorph[parquet,avro,protobuf]"]
+# Self-reference must use the actual package name (datamorph-cli), not the
+# import name — using "datamorph[...]" here silently installs an unrelated
+# PyPI package that shadows the local src/datamorph/ namespace at import time.
+all = ["datamorph-cli[parquet,avro,protobuf]"]
 
 [project.scripts]
 datamorph = "datamorph.cli:cli"
