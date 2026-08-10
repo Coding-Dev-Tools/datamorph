@@ -100,9 +100,7 @@ def convert_cmd(
 @click.option("--from", "-f", "from_format", required=True, help="Source format")
 @click.option("--to", "-t", "to_format", required=True, help="Target format")
 @click.option("--pattern", default="*", help="File glob pattern (default: all files)")
-@click.option(
-    "--recursive", "-r", is_flag=True, help="Search subdirectories recursively"
-)
+@click.option("--recursive", "-r", is_flag=True, help="Search subdirectories recursively")
 @click.option("--csv-delimiter", default=",", help="CSV delimiter")
 def batch_cmd(
     input_dir: str,
@@ -151,9 +149,7 @@ def batch_cmd(
 
 @cli.command()
 @click.argument("file", type=click.Path(exists=True))
-@click.option(
-    "--format", "-f", "fmt", default=None, help="File format (auto-detected if omitted)"
-)
+@click.option("--format", "-f", "fmt", default=None, help="File format (auto-detected if omitted)")
 @click.option("--json-output", "-j", is_flag=True, help="Output schema as JSON")
 @click.option(
     "--sample",
@@ -224,9 +220,7 @@ def formats_cmd() -> None:
 
 @cli.command()
 @click.argument("file", type=click.Path(exists=True))
-@click.option(
-    "--format", "-f", "fmt", default=None, help="File format (auto-detected if omitted)"
-)
+@click.option("--format", "-f", "fmt", default=None, help="File format (auto-detected if omitted)")
 @click.option(
     "--schema",
     "-s",
@@ -240,12 +234,8 @@ def formats_cmd() -> None:
     is_flag=True,
     help="Strict mode: fail on type mismatches and missing fields",
 )
-@click.option(
-    "--max-rows", default=0, type=int, help="Maximum rows to validate (0 = all)"
-)
-@click.option(
-    "--json-output", "-j", is_flag=True, help="Output validation result as JSON"
-)
+@click.option("--max-rows", default=0, type=int, help="Maximum rows to validate (0 = all)")
+@click.option("--json-output", "-j", is_flag=True, help="Output validation result as JSON")
 def validate_cmd(
     file: str,
     fmt: str | None,
@@ -286,9 +276,7 @@ def validate_cmd(
         console.print(json.dumps(output, indent=2))
     else:
         if result.valid:
-            console.print(
-                f"[green]✓ VALID[/green] — {result.rows_checked} rows checked"
-            )
+            console.print(f"[green]✓ VALID[/green] — {result.rows_checked} rows checked")
         else:
             console.print(f"[red]✗ INVALID[/red] — {result.rows_checked} rows checked")
 

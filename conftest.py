@@ -1,4 +1,5 @@
 """pytest configuration — add project src to Python path and skip rate limits."""
+
 import os
 import sys
 from pathlib import Path
