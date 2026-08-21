@@ -176,8 +176,18 @@ def schema_cmd(
         err_console.print(f"[red]Could not detect format for: {file}[/red]")
         sys.exit(1)
 
-    reader = get_reader(fmt)
-    schema = reader.infer_schema(file, sample_size=sample)
+    try:
+        reader = get_reader(fmt)
+    except ValueError as e:
+        err_console.print(f"[red]ERROR:[/red] {e}")
+        sys.exit(1)
+    try:
+        schema = reader.infer_schema(file, sample_size=sample)
+    except Exception as e:
+        err_console.print(
+            f"[red]ERROR:[/red] Could not infer schema from {file}: {e}"
+        )
+        sys.exit(1)
 
     if json_output:
         console.print(json.dumps(schema, indent=2))
@@ -192,7 +202,7 @@ def schema_cmd(
 
     console.print(f"\nDetected format: [bold]{fmt}[/bold]")
     console.print(table)
-    console.print(f"[dim]Inferred from {sample}+ rows[/dim]")
+    console.print(f"[dim]Inferred from a sample of up to {sample} rows[/dim]")
 
 
 # ── formats ──────────────────────────────────────────────────────────
