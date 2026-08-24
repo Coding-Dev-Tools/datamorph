@@ -275,8 +275,28 @@ def validate_cmd(
     # Load expected schema if provided
     expected_schema = None
     if schema_file:
-        with open(schema_file, "r", encoding="utf-8") as f:
-            expected_schema = json.load(f)
+        try:
+            with open(schema_file, "r", encoding="utf-8") as f:
+                expected_schema = json.load(f)
+        except (OSError, json.JSONDecodeError) as e:
+            err_console.print(
+                f"[red]ERROR:[/red] Could not load schema file {schema_file}: {e}"
+            )
+            sys.exit(1)
+        if (
+            not isinstance(expected_schema, list)
+            or not expected_schema
+            or not all(
+                isinstance(f_, dict) and "name" in f_ and "type" in f_
+                for f_ in expected_schema
+            )
+        ):
+            err_console.print(
+                "[red]ERROR:[/red] Schema file must be a non-empty JSON list of "
+                'objects with "name" and "type" keys '
+                '(generate one with: datamorph schema data.csv --json-output)'
+            )
+            sys.exit(1)
 
     result = validate(
         file,

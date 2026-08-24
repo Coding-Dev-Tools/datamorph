@@ -399,6 +399,12 @@ class AvroWriter(FormatWriter):
 
         rows_list = list(rows)
         if not rows_list:
+            # Zero-in is legitimate, but the output file must still exist:
+            # write a valid empty Avro container (record with no fields)
+            # instead of silently producing no artifact.
+            empty_schema = {"type": "record", "name": "Record", "fields": []}
+            with open(path, "wb") as f:
+                fastavro.writer(f, empty_schema, [])
             return 0
 
         # Infer schema across all rows for proper type detection
