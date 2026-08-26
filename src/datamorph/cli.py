@@ -118,7 +118,7 @@ def batch_cmd(
     if csv_delimiter != ",":
         writer_kwargs["delimiter"] = csv_delimiter
 
-    results = convert_batch(
+    batch = convert_batch(
         input_dir,
         output_dir,
         from_format,
@@ -127,11 +127,25 @@ def batch_cmd(
         recursive=recursive,
         **writer_kwargs,
     )
+    results = batch.results
 
     success = [r for r in results if not r.errors]
     failed = [r for r in results if r.errors]
 
     console.print("\n[bold]Batch Conversion Complete[/bold]")
+
+    # Files that matched the pattern but were skipped due to format mismatch
+    # are surfaced explicitly instead of vanishing silently.
+    if batch.skipped:
+        console.print(
+            f"  Skipped (format mismatch): {len(batch.skipped)}"
+            " - did not match --from format"
+        )
+        for item in batch.skipped:
+            err_console.print(
+                f"  [yellow]SKIPPED[/yellow] {item['file']} "
+                f"(detected: {item['detected_format']}, expected: {from_format})"
+            )
     console.print(f"  Files: {len(success)} converted, {len(failed)} failed")
 
     if failed:
