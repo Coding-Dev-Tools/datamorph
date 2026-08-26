@@ -118,7 +118,7 @@ def batch_cmd(
     if csv_delimiter != ",":
         writer_kwargs["delimiter"] = csv_delimiter
 
-    results = convert_batch(
+    batch = convert_batch(
         input_dir,
         output_dir,
         from_format,
@@ -127,11 +127,25 @@ def batch_cmd(
         recursive=recursive,
         **writer_kwargs,
     )
+    results = batch.results
 
     success = [r for r in results if not r.errors]
     failed = [r for r in results if r.errors]
 
     console.print("\n[bold]Batch Conversion Complete[/bold]")
+
+    # Files that matched the pattern but were skipped due to format mismatch
+    # are surfaced explicitly instead of vanishing silently.
+    if batch.skipped:
+        console.print(
+            f"  Skipped (format mismatch): {len(batch.skipped)}"
+            " - did not match --from format"
+        )
+        for item in batch.skipped:
+            err_console.print(
+                f"  [yellow]SKIPPED[/yellow] {item['file']} "
+                f"(detected: {item['detected_format']}, expected: {from_format})"
+            )
     console.print(f"  Files: {len(success)} converted, {len(failed)} failed")
 
     if failed:
@@ -176,8 +190,18 @@ def schema_cmd(
         err_console.print(f"[red]Could not detect format for: {file}[/red]")
         sys.exit(1)
 
-    reader = get_reader(fmt)
-    schema = reader.infer_schema(file, sample_size=sample)
+    try:
+        reader = get_reader(fmt)
+    except ValueError as e:
+        err_console.print(f"[red]ERROR:[/red] {e}")
+        sys.exit(1)
+    try:
+        schema = reader.infer_schema(file, sample_size=sample)
+    except Exception as e:
+        err_console.print(
+            f"[red]ERROR:[/red] Could not infer schema from {file}: {e}"
+        )
+        sys.exit(1)
 
     if json_output:
         console.print(json.dumps(schema, indent=2))
@@ -192,7 +216,7 @@ def schema_cmd(
 
     console.print(f"\nDetected format: [bold]{fmt}[/bold]")
     console.print(table)
-    console.print(f"[dim]Inferred from {sample}+ rows[/dim]")
+    console.print(f"[dim]Inferred from a sample of up to {sample} rows[/dim]")
 
 
 # ── formats ──────────────────────────────────────────────────────────
@@ -265,8 +289,28 @@ def validate_cmd(
     # Load expected schema if provided
     expected_schema = None
     if schema_file:
-        with open(schema_file, "r", encoding="utf-8") as f:
-            expected_schema = json.load(f)
+        try:
+            with open(schema_file, "r", encoding="utf-8") as f:
+                expected_schema = json.load(f)
+        except (OSError, json.JSONDecodeError) as e:
+            err_console.print(
+                f"[red]ERROR:[/red] Could not load schema file {schema_file}: {e}"
+            )
+            sys.exit(1)
+        if (
+            not isinstance(expected_schema, list)
+            or not expected_schema
+            or not all(
+                isinstance(f_, dict) and "name" in f_ and "type" in f_
+                for f_ in expected_schema
+            )
+        ):
+            err_console.print(
+                "[red]ERROR:[/red] Schema file must be a non-empty JSON list of "
+                'objects with "name" and "type" keys '
+                '(generate one with: datamorph schema data.csv --json-output)'
+            )
+            sys.exit(1)
 
     result = validate(
         file,

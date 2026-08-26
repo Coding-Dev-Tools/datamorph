@@ -399,6 +399,12 @@ class AvroWriter(FormatWriter):
 
         rows_list = list(rows)
         if not rows_list:
+            # Zero-in is legitimate, but the output file must still exist:
+            # write a valid empty Avro container (record with no fields)
+            # instead of silently producing no artifact.
+            empty_schema = {"type": "record", "name": "Record", "fields": []}
+            with open(path, "wb") as f:
+                fastavro.writer(f, empty_schema, [])
             return 0
 
         # Infer schema across all rows for proper type detection
@@ -594,6 +600,21 @@ def convert(
     return result
 
 
+@dataclass
+class BatchConversionResult:
+    """Outcome of a batch conversion, including files that were skipped.
+
+    ``skipped`` records every file that matched ``pattern`` but was NOT
+    converted because its detected format differed from ``input_format``
+    (or the format could not be detected at all). Surfacing these prevents
+    the classic silent failure where a directory conversion quietly drops
+    mislabeled or foreign-format files while reporting success.
+    """
+
+    results: list[ConversionResult] = field(default_factory=list)
+    skipped: list[dict[str, str]] = field(default_factory=list)
+
+
 def convert_batch(
     input_dir: str | Path,
     output_dir: str | Path,
@@ -602,19 +623,26 @@ def convert_batch(
     pattern: str = "*",
     recursive: bool = False,
     **writer_kwargs: Any,
-) -> list[ConversionResult]:
+) -> BatchConversionResult:
     """Convert all matching files in a directory."""
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     glob_pattern = f"**/{pattern}" if recursive else pattern
-    results: list[ConversionResult] = []
+    batch = BatchConversionResult()
 
     for input_path in sorted(input_dir.glob(glob_pattern)):
         if input_path.is_dir():
             continue
-        if detect_format(str(input_path)) != input_format:
+        detected = detect_format(str(input_path))
+        if detected != input_format:
+            batch.skipped.append(
+                {
+                    "file": str(input_path),
+                    "detected_format": detected or "unknown",
+                }
+            )
             continue
 
         # Preserve relative path structure
@@ -631,9 +659,9 @@ def convert_batch(
             output_format,
             **writer_kwargs,
         )
-        results.append(result)
+        batch.results.append(result)
 
-    return results
+    return batch
 
 
 def _format_to_extension(fmt: str) -> str:

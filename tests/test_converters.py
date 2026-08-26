@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 import yaml
@@ -819,9 +820,10 @@ class TestBatchConversion:
             "json",
             pattern="test.csv",
         )
-        assert len(results) >= 1
-        assert not results[0].errors
-        assert results[0].rows_written == 3
+        assert len(results.results) >= 1
+        assert results.skipped == []
+        assert not results.results[0].errors
+        assert results.results[0].rows_written == 3
         assert (output_dir / "test.json").exists()
 
     def test_batch_no_matches(self, tmp_path):
@@ -835,7 +837,27 @@ class TestBatchConversion:
             "json",
             pattern="*.csv",
         )
-        assert results == []
+        assert results.results == []
+        assert results.skipped == []
+
+
+class TestBatchSkippedReporting:
+    def test_format_mismatch_is_reported_not_silent(self, tmp_path):
+        """A file matching the pattern but with a different detected format is
+        recorded in ``skipped`` instead of vanishing without a trace."""
+        input_dir = tmp_path / "in"
+        input_dir.mkdir()
+        (input_dir / "data.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+        # Mislabeled: .csv extension but JSONL content -> detect_format sees jsonl? No:
+        # detection is extension-based, so use a foreign extension instead.
+        (input_dir / "notes.txt").write_text("hello", encoding="utf-8")
+        output_dir = tmp_path / "out"
+        results = convert_batch(str(input_dir), str(output_dir), "csv", "json")
+        names = [Path(item["file"]).name for item in results.skipped]
+        assert names == ["notes.txt"]
+        assert results.skipped[0]["detected_format"] in ("txt", "unknown")
+        # The real csv was still converted.
+        assert [r.rows_written for r in results.results] == [1]
 
 
 # ── Type inference ────────────────────────────────────────────────────
@@ -993,3 +1015,4 @@ class TestScalarJsonRootAndRowsRead:
         assert result.rows_read == 1
         assert result.rows_written == 1
         assert json.loads(out.read_text(encoding="utf-8")) == [{"data": True}]
+
