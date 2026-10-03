@@ -11,7 +11,7 @@
 - Notes: 130 passed in 2.94s
 
 ## 2026-06-10 workspace state
-- Repo root discovered: C:\Users\jomie\Documents\Github\datamorph
+- Repo root discovered: C:\Users\home\Documents\Github\datamorph
 - Project type: Python
 - Test runner: pytest
 - No backend/service dependency present in project
